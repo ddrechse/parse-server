@@ -43,10 +43,15 @@ RUN npm ci --production --ignore-scripts
 COPY bin bin
 COPY public_html public_html
 COPY views views
+#COPY lib lib  // For Diagnostics
 COPY --from=build /tmp/lib lib
 RUN mkdir -p logs && chown -R node: logs
 
 ENV PORT=1337
+ENV VERBOSE=true
+ENV PARSE_SERVER_APPLICATION_ID=APPLICATION_ID
+ENV PARSE_SERVER_MASTER_KEY=MASTER_KEY
+ENV PARSE_SERVER_DATABASE_URI=mongodb://admin:password@DBConnectionString:Port/admin?authMechanism=PLAIN\&authSource=\$external\&ssl=true\&retryWrites=false\&loadBalanced=true
 USER node
 EXPOSE $PORT
 
