@@ -43,15 +43,20 @@ RUN npm ci --production --ignore-scripts
 COPY bin bin
 COPY public_html public_html
 COPY views views
-#COPY lib lib  // For Diagnostics
+  
+# Where the server side cloud functions are kept
+COPY cloud cloud
+# COPY lib lib   // For Debug Builds
 COPY --from=build /tmp/lib lib
 RUN mkdir -p logs && chown -R node: logs
 
 ENV PORT=1337
 ENV VERBOSE=true
 ENV PARSE_SERVER_APPLICATION_ID=APPLICATION_ID
-ENV PARSE_SERVER_MASTER_KEY=MASTER_KEY
-ENV PARSE_SERVER_DATABASE_URI=mongodb://admin:password@DBConnectionString:Port/admin?authMechanism=PLAIN\&authSource=\$external\&ssl=true\&retryWrites=false\&loadBalanced=true
+ENV PARSE_SERVER_MASTER_KEY=CDD_MASTER_KEY
+#  Location of Cloud Functions
+ENV PARSE_SERVER_CLOUD=./cloud/main.js
+ENV PARSE_SERVER_DATABASE_URI=mongodb://admin:D!ndy1234567@D4VVQTGHTA12FYY-PARSEMONGO.adb.us-ashburn-1.oraclecloudapps.com:27017/admin?authMechanism=PLAIN\&authSource=\$external\&ssl=true\&retryWrites=false\&loadBalanced=true
 USER node
 EXPOSE $PORT
 
