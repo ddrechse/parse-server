@@ -23,4 +23,18 @@
     }
     return sum / results.length;
   });
-  
+
+  Parse.Cloud.beforeSave("Review", (request) => {
+    console.log("CDD In Review Before Save");
+    console.log(request);
+    },{
+      fields: {
+        stars : {
+          required:true,
+          options: stars => {
+            return stars > 1;
+          },
+          error: 'Your review must be between one and five stars'
+        }
+      }
+    });
