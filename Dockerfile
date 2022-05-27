@@ -56,7 +56,8 @@ ENV PARSE_SERVER_APPLICATION_ID=APPLICATION_ID
 ENV PARSE_SERVER_MASTER_KEY=CDD_MASTER_KEY
 #  Location of Cloud Functions
 ENV PARSE_SERVER_CLOUD=./cloud/main.js
-ENV PARSE_SERVER_DATABASE_URI=mongodb://admin:D!ndy1234567@D4VVQTGHTA12FYY-PARSEMONGO.adb.us-ashburn-1.oraclecloudapps.com:27017/admin?authMechanism=PLAIN\&authSource=\$external\&ssl=true\&retryWrites=false\&loadBalanced=true
+# Oracle Mongo API Connection String
+# ENV PARSE_SERVER_DATABASE_URI=mongodb://admin:password@DBConnectionString:Port/admin?authMechanism=PLAIN\&authSource=\$external\&ssl=true\&retryWrites=false
 USER node
 EXPOSE $PORT
 

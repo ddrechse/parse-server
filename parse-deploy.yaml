@@ -14,6 +14,9 @@ spec:
     spec:
       containers:
         - name: parse-server
+          env:
+            - name: PARSE_SERVER_DATABASE_URI
+              value: mongodb://admin:password@DBConnectionString:Port/admin?authMechanism=PLAIN&authSource=$external&ssl=true&retryWrites=false
           image: iad.ocir.io/tenancy/registry/my-parse-server:1.0.0
 # Image that will be used to containers in the cluster
           imagePullPolicy: Always
