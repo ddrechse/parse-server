@@ -53,7 +53,7 @@ RUN mkdir -p logs && chown -R node: logs
 ENV PORT=1337
 ENV VERBOSE=true
 ENV PARSE_SERVER_APPLICATION_ID=APPLICATION_ID
-ENV PARSE_SERVER_MASTER_KEY=CDD_MASTER_KEY
+ENV PARSE_SERVER_MASTER_KEY=MASTER_KEY
 #  Location of Cloud Functions
 ENV PARSE_SERVER_CLOUD=./cloud/main.js
 # Oracle Mongo API Connection String
