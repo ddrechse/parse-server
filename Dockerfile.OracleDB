@@ -44,6 +44,11 @@ RUN npm ci --production --ignore-scripts
 COPY bin bin
 COPY public_html public_html
 COPY views views  
+# Copy Files for Oracle Client
+#COPY wallet /wallet
+#COPY instantclient_19_15 /opt/oracle/instantclient_19_15
+#ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_15
+
 # Where the server side cloud functions are kept
 COPY cloud cloud
 # COPY lib lib   // For Debug Builds
@@ -56,7 +61,7 @@ ENV PARSE_SERVER_APPLICATION_ID=APPLICATION_ID
 ENV PARSE_SERVER_MASTER_KEY=MASTER_KEY
 #  Location of Cloud Functions
 ENV PARSE_SERVER_CLOUD=./cloud/main.js
-ENV PARSE_SERVER_DATABASE_URI=mongodb://admin:password@D4VVQTGHTA12FYY-PARSEMONGO.adb.us-ashburn-1.oraclecloudapps.com:27017/admin?authMechanism=PLAIN\&authSource=\$external\&ssl=true\&retryWrites=false\&loadBalanced=true
+ENV PARSE_SERVER_DATABASE_URI=mongodb://admin:password@VQTGHTA12FYY-myDB.adb.us-ashburn-1.oraclecloudapps.com:27017/admin?authMechanism=PLAIN\&authSource=\$external\&ssl=true\&retryWrites=false\&loadBalanced=true
 USER node
 EXPOSE $PORT
 
