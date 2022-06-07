@@ -13,8 +13,12 @@ COPY package*.json ./
 # Copy src to have config files for install
 COPY . .
 
+
 # Clean npm cache; added to fix an issue with the install process
 RUN npm cache clean --force
+
+# Speed up build be removing npm lock
+# RUN npm install --package-lock-only
 
 # Install all dependencies
 RUN npm ci
@@ -45,9 +49,9 @@ COPY bin bin
 COPY public_html public_html
 COPY views views  
 # Copy Files for Oracle Client
-#COPY wallet /wallet
-#COPY instantclient_19_15 /opt/oracle/instantclient_19_15
-#ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_15
+COPY wallet /wallet
+COPY instantclient_19_15 /opt/oracle/instantclient_19_15
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_19_15
 
 # Where the server side cloud functions are kept
 COPY cloud cloud
