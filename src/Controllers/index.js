@@ -21,6 +21,7 @@ import { WinstonLoggerAdapter } from '../Adapters/Logger/WinstonLoggerAdapter';
 import { InMemoryCacheAdapter } from '../Adapters/Cache/InMemoryCacheAdapter';
 import { AnalyticsAdapter } from '../Adapters/Analytics/AnalyticsAdapter';
 import MongoStorageAdapter from '../Adapters/Storage/Mongo/MongoStorageAdapter';
+import OracleStorageAdapter from '../../lib/Adapters/Storage/Oracle/OracleStorageAdapter';
 import PostgresStorageAdapter from '../Adapters/Storage/Postgres/PostgresStorageAdapter';
 import ParsePushAdapter from '@parse/push-adapter';
 import ParseGraphQLController from './ParseGraphQLController';
@@ -236,6 +237,12 @@ export function getDatabaseAdapter(databaseURI, collectionPrefix, databaseOption
     case 'postgres:':
     case 'postgresql:':
       return new PostgresStorageAdapter({
+        uri: databaseURI,
+        collectionPrefix,
+        databaseOptions,
+      });
+    case 'oracle:':
+      return new OracleStorageAdapter({
         uri: databaseURI,
         collectionPrefix,
         databaseOptions,
