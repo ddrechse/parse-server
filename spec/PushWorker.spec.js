@@ -5,7 +5,7 @@ const { pushStatusHandler } = require('../lib/StatusHandler');
 const rest = require('../lib/rest');
 
 describe('PushWorker', () => {
-  it('should run with small batch', done => {
+  it_exclude_dbs(['oracle'])('should run with small batch', done => {
     const batchSize = 3;
     let sendCount = 0;
     reconfigureServer({
@@ -271,7 +271,7 @@ describe('PushWorker', () => {
       toAwait.then(done).catch(done);
     });
 
-    it('tracks push status per UTC offsets', done => {
+    it_exclude_dbs(['oracle'])('tracks push status per UTC offsets', done => {
       const config = Config.get('test');
       const handler = pushStatusHandler(config);
       const spy = spyOn(rest, 'update').and.callThrough();

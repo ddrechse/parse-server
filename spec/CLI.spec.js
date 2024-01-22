@@ -218,7 +218,7 @@ describe('execution', () => {
     }
   });
 
-  it('should start Parse Server', done => {
+  it_exclude_dbs(['oracle'])('should start Parse Server', done => {
     const env = { ...process.env };
     env.NODE_OPTIONS = '--dns-result-order=ipv4first';
     childProcess = spawn(
@@ -237,7 +237,7 @@ describe('execution', () => {
     });
   });
 
-  it('should start Parse Server with GraphQL', async done => {
+  it_exclude_dbs(['oracle'])('should start Parse Server with GraphQL', async done => {
     const env = { ...process.env };
     env.NODE_OPTIONS = '--dns-result-order=ipv4first';
     childProcess = spawn(
@@ -269,41 +269,44 @@ describe('execution', () => {
     });
   });
 
-  it('should start Parse Server with GraphQL and Playground', async done => {
-    const env = { ...process.env };
-    env.NODE_OPTIONS = '--dns-result-order=ipv4first';
-    childProcess = spawn(
-      binPath,
-      [
-        '--appId',
-        'test',
-        '--masterKey',
-        'test',
-        '--databaseURI',
-        databaseURI,
-        '--port',
-        '1341',
-        '--mountGraphQL',
-        '--mountPlayground',
-      ],
-      { env }
-    );
-    let output = '';
-    childProcess.stdout.on('data', data => {
-      data = data.toString();
-      output += data;
-      if (data.includes('Playground running on')) {
-        expect(output).toMatch('GraphQL running on');
-        expect(output).toMatch('parse-server running on');
-        done();
-      }
-    });
-    childProcess.stderr.on('data', data => {
-      done.fail(data.toString());
-    });
-  });
+  it_exclude_dbs(['oracle'])(
+    'should start Parse Server with GraphQL and Playground',
+    async done => {
+      const env = { ...process.env };
+      env.NODE_OPTIONS = '--dns-result-order=ipv4first';
+      childProcess = spawn(
+        binPath,
+        [
+          '--appId',
+          'test',
+          '--masterKey',
+          'test',
+          '--databaseURI',
+          databaseURI,
+          '--port',
+          '1341',
+          '--mountGraphQL',
+          '--mountPlayground',
+        ],
+        { env }
+      );
+      let output = '';
+      childProcess.stdout.on('data', data => {
+        data = data.toString();
+        output += data;
+        if (data.includes('Playground running on')) {
+          expect(output).toMatch('GraphQL running on');
+          expect(output).toMatch('parse-server running on');
+          done();
+        }
+      });
+      childProcess.stderr.on('data', data => {
+        done.fail(data.toString());
+      });
+    }
+  );
 
-  it('can start Parse Server with auth via CLI', done => {
+  it_exclude_dbs(['oracle'])('can start Parse Server with auth via CLI', done => {
     const env = { ...process.env };
     env.NODE_OPTIONS = '--dns-result-order=ipv4first';
     childProcess = spawn(

@@ -95,7 +95,7 @@ describe('Parse.Query Aggregate testing', () => {
     });
   });
 
-  it('group by field', done => {
+  it_exclude_dbs(['oracle'])('group by field', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $group: { _id: '$name' },
@@ -115,7 +115,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('group by pipeline operator', async () => {
+  it_exclude_dbs(['oracle'])('group by pipeline operator', async () => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         pipeline: {
@@ -133,7 +133,7 @@ describe('Parse.Query Aggregate testing', () => {
     expect(resp.results[2].objectId).not.toBe(undefined);
   });
 
-  it('group by empty object', done => {
+  it_exclude_dbs(['oracle'])('group by empty object', done => {
     const obj = new TestObject();
     const pipeline = [
       {
@@ -152,7 +152,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('group by empty string', done => {
+  it_exclude_dbs(['oracle'])('group by empty string', done => {
     const obj = new TestObject();
     const pipeline = [
       {
@@ -171,7 +171,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('group by empty array', done => {
+  it_exclude_dbs(['oracle'])('group by empty array', done => {
     const obj = new TestObject();
     const pipeline = [
       {
@@ -190,7 +190,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('group by multiple columns ', done => {
+  it_exclude_dbs(['oracle'])('group by multiple columns ', done => {
     const obj1 = new TestObject();
     const obj2 = new TestObject();
     const obj3 = new TestObject();
@@ -216,7 +216,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('group by date object', done => {
+  it_exclude_dbs(['oracle'])('group by date object', done => {
     const obj1 = new TestObject();
     const obj2 = new TestObject();
     const obj3 = new TestObject();
@@ -246,7 +246,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('group by date object transform', done => {
+  it_exclude_dbs(['oracle'])('group by date object transform', done => {
     const obj1 = new TestObject();
     const obj2 = new TestObject();
     const obj3 = new TestObject();
@@ -276,7 +276,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('group by number', done => {
+  it_exclude_dbs(['oracle'])('group by number', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $group: { _id: '$score' },
@@ -296,7 +296,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it_exclude_dbs(['postgres'])('group and multiply transform', done => {
+  it_exclude_dbs(['postgres', 'oracle'])('group and multiply transform', done => {
     const obj1 = new TestObject({ name: 'item a', quantity: 2, price: 10 });
     const obj2 = new TestObject({ name: 'item b', quantity: 5, price: 5 });
     const pipeline = [
@@ -319,7 +319,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it_exclude_dbs(['postgres'])('project and multiply transform', done => {
+  it_exclude_dbs(['postgres', 'oracle'])('project and multiply transform', done => {
     const obj1 = new TestObject({ name: 'item a', quantity: 2, price: 10 });
     const obj2 = new TestObject({ name: 'item b', quantity: 5, price: 5 });
     const pipeline = [
@@ -351,7 +351,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it_exclude_dbs(['postgres'])('project without objectId transform', done => {
+  it_exclude_dbs(['postgres', 'oracle'])('project without objectId transform', done => {
     const obj1 = new TestObject({ name: 'item a', quantity: 2, price: 10 });
     const obj2 = new TestObject({ name: 'item b', quantity: 5, price: 5 });
     const pipeline = [
@@ -383,7 +383,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it_exclude_dbs(['postgres'])('project updatedAt only transform', done => {
+  it_exclude_dbs(['postgres', 'oracle'])('project updatedAt only transform', done => {
     const pipeline = [
       {
         $project: { _id: 0, updatedAt: 1 },
@@ -401,7 +401,7 @@ describe('Parse.Query Aggregate testing', () => {
     });
   });
 
-  it_exclude_dbs(['postgres'])(
+  it_exclude_dbs(['postgres', 'oracle'])(
     'can group by any date field (it does not work if you have dirty data)', // rows in your collection with non date data in the field that is supposed to be a date
     done => {
       const obj1 = new TestObject({ dateField2019: new Date(1990, 11, 1) });
@@ -472,7 +472,7 @@ describe('Parse.Query Aggregate testing', () => {
     }
   );
 
-  it('group by pointer', done => {
+  it_exclude_dbs(['oracle'])('group by pointer', done => {
     const pointer1 = new TestObject();
     const pointer2 = new TestObject();
     const obj1 = new TestObject({ pointer: pointer1 });
@@ -493,7 +493,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('group sum query', done => {
+  it_exclude_dbs(['oracle'])('group sum query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $group: { _id: null, total: { $sum: '$score' } },
@@ -509,7 +509,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('group count query', done => {
+  it_exclude_dbs(['oracle'])('group count query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $group: { _id: null, total: { $sum: 1 } },
@@ -525,7 +525,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('group min query', done => {
+  it_exclude_dbs(['oracle'])('group min query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $group: { _id: null, minScore: { $min: '$score' } },
@@ -541,7 +541,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('group max query', done => {
+  it_exclude_dbs(['oracle'])('group max query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $group: { _id: null, maxScore: { $max: '$score' } },
@@ -557,7 +557,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('group avg query', done => {
+  it_exclude_dbs(['oracle'])('group avg query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $group: { _id: null, avgScore: { $avg: '$score' } },
@@ -573,7 +573,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('limit query', done => {
+  it_exclude_dbs(['oracle'])('limit query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $limit: 2,
@@ -587,7 +587,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('sort ascending query', done => {
+  it_exclude_dbs(['oracle'])('sort ascending query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $sort: { name: 1 },
@@ -605,7 +605,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('sort decending query', done => {
+  it_exclude_dbs(['oracle'])('sort decending query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $sort: { name: -1 },
@@ -623,7 +623,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('skip query', done => {
+  it_exclude_dbs(['oracle'])('skip query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $skip: 2,
@@ -637,7 +637,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('match comparison date query', done => {
+  it_exclude_dbs(['oracle'])('match comparison date query', done => {
     const today = new Date();
     const yesterday = new Date();
     const tomorrow = new Date();
@@ -658,7 +658,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('should aggregate with Date object (directAccess)', async () => {
+  it_exclude_dbs(['oracle'])('should aggregate with Date object (directAccess)', async () => {
     const rest = require('../lib/rest');
     const auth = require('../lib/Auth');
     const TestObject = Parse.Object.extend('TestObject');
@@ -675,7 +675,7 @@ describe('Parse.Query Aggregate testing', () => {
     expect(resp.results.length).toBe(1);
   });
 
-  it('match comparison query', done => {
+  it_exclude_dbs(['oracle'])('match comparison query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $match: { score: { $gt: 15 } },
@@ -690,7 +690,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('match multiple comparison query', done => {
+  it_exclude_dbs(['oracle'])('match multiple comparison query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $match: { score: { $gt: 5, $lt: 15 } },
@@ -707,7 +707,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('match complex comparison query', done => {
+  it_exclude_dbs(['oracle'])('match complex comparison query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $match: { score: { $gt: 5, $lt: 15 }, views: { $gt: 850, $lt: 1000 } },
@@ -723,7 +723,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('match comparison and equality query', done => {
+  it_exclude_dbs(['oracle'])('match comparison and equality query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $match: { score: { $gt: 5, $lt: 15 }, views: 900 },
@@ -739,7 +739,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('match $or query', done => {
+  it_exclude_dbs(['oracle'])('match $or query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $match: {
@@ -762,7 +762,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('match objectId query', done => {
+  it_exclude_dbs(['oracle'])('match objectId query', done => {
     const obj1 = new TestObject();
     const obj2 = new TestObject();
     Parse.Object.saveAll([obj1, obj2])
@@ -778,7 +778,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('match field query', done => {
+  it_exclude_dbs(['oracle'])('match field query', done => {
     const obj1 = new TestObject({ name: 'TestObject1' });
     const obj2 = new TestObject({ name: 'TestObject2' });
     Parse.Object.saveAll([obj1, obj2])
@@ -794,7 +794,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('match pointer query', done => {
+  it_exclude_dbs(['oracle'])('match pointer query', done => {
     const pointer1 = new PointerObject();
     const pointer2 = new PointerObject();
     const obj1 = new TestObject({ pointer: pointer1 });
@@ -817,7 +817,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it_exclude_dbs(['postgres'])('match exists query', done => {
+  it_exclude_dbs(['postgres', 'oracle'])('match exists query', done => {
     const pipeline = [{ $match: { score: { $exists: true } } }];
     const query = new Parse.Query(TestObject);
     query.aggregate(pipeline).then(results => {
@@ -826,7 +826,7 @@ describe('Parse.Query Aggregate testing', () => {
     });
   });
 
-  it('match date query - createdAt', done => {
+  it_exclude_dbs(['oracle'])('match date query - createdAt', done => {
     const obj1 = new TestObject();
     const obj2 = new TestObject();
 
@@ -845,7 +845,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('match date query - updatedAt', done => {
+  it_exclude_dbs(['oracle'])('match date query - updatedAt', done => {
     const obj1 = new TestObject();
     const obj2 = new TestObject();
 
@@ -864,7 +864,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('match date query - empty', done => {
+  it_exclude_dbs(['oracle'])('match date query - empty', done => {
     const obj1 = new TestObject();
     const obj2 = new TestObject();
 
@@ -882,7 +882,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it_exclude_dbs(['postgres'])('match pointer with operator query', done => {
+  it_exclude_dbs(['postgres', 'oracle'])('match pointer with operator query', done => {
     const pointer = new PointerObject();
 
     const obj1 = new TestObject({ pointer });
@@ -905,7 +905,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it_exclude_dbs(['postgres'])('match null values', async () => {
+  it_exclude_dbs(['postgres', 'oracle'])('match null values', async () => {
     const obj1 = new Parse.Object('MyCollection');
     obj1.set('language', 'en');
     obj1.set('otherField', 1);
@@ -955,7 +955,7 @@ describe('Parse.Query Aggregate testing', () => {
     ).toEqual([1, 2, 3, 4]);
   });
 
-  it('project query', done => {
+  it_exclude_dbs(['oracle'])('project query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $project: { name: 1 },
@@ -975,7 +975,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('multiple project query', done => {
+  it_exclude_dbs(['oracle'])('multiple project query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $project: { name: 1, score: 1, sender: 1 },
@@ -995,7 +995,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('project pointer query', done => {
+  it_exclude_dbs(['oracle'])('project pointer query', done => {
     const pointer = new PointerObject();
     const obj = new TestObject({ pointer, name: 'hello' });
 
@@ -1018,7 +1018,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('project with group query', done => {
+  it_exclude_dbs(['oracle'])('project with group query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $project: { score: 1 },
@@ -1074,7 +1074,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('distinct query', done => {
+  it_exclude_dbs(['oracle'])('distinct query', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: { distinct: 'score' },
     });
@@ -1088,7 +1088,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('distinct query with where', done => {
+  it_exclude_dbs(['oracle'])('distinct query with where', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         distinct: 'score',
@@ -1105,7 +1105,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('distinct query with where string', done => {
+  it_exclude_dbs(['oracle'])('distinct query with where string', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         distinct: 'score',
@@ -1120,7 +1120,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('distinct nested', done => {
+  it_exclude_dbs(['oracle'])('distinct nested', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: { distinct: 'sender.group' },
     });
@@ -1134,7 +1134,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('distinct pointer', done => {
+  it_exclude_dbs(['oracle'])('distinct pointer', done => {
     const pointer1 = new PointerObject();
     const pointer2 = new PointerObject();
     const obj1 = new TestObject({ pointer: pointer1 });
@@ -1153,7 +1153,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it('distinct class does not exist return empty', done => {
+  it_exclude_dbs(['oracle'])('distinct class does not exist return empty', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: { distinct: 'unknown' },
     });
@@ -1165,7 +1165,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('distinct field does not exist return empty', done => {
+  it_exclude_dbs(['oracle'])('distinct field does not exist return empty', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: { distinct: 'unknown' },
     });
@@ -1182,7 +1182,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('distinct array', done => {
+  it_exclude_dbs(['oracle'])('distinct array', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: { distinct: 'size' },
     });
@@ -1197,13 +1197,13 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('distinct objectId', async () => {
+  it_exclude_dbs(['oracle'])('distinct objectId', async () => {
     const query = new Parse.Query(TestObject);
     const results = await query.distinct('objectId');
     expect(results.length).toBe(4);
   });
 
-  it('distinct createdAt', async () => {
+  it_exclude_dbs(['oracle'])('distinct createdAt', async () => {
     const object1 = new TestObject({ createdAt_test: true });
     await object1.save();
     const object2 = new TestObject({ createdAt_test: true });
@@ -1214,7 +1214,7 @@ describe('Parse.Query Aggregate testing', () => {
     expect(results.length).toBe(2);
   });
 
-  it('distinct updatedAt', async () => {
+  it_exclude_dbs(['oracle'])('distinct updatedAt', async () => {
     const object1 = new TestObject({ updatedAt_test: true });
     await object1.save();
     const object2 = new TestObject();
@@ -1227,7 +1227,7 @@ describe('Parse.Query Aggregate testing', () => {
     expect(results.length).toBe(2);
   });
 
-  it('distinct null field', done => {
+  it_exclude_dbs(['oracle'])('distinct null field', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: { distinct: 'distinctField' },
     });
@@ -1256,7 +1256,7 @@ describe('Parse.Query Aggregate testing', () => {
       .catch(done.fail);
   });
 
-  it('does not return sensitive hidden properties', done => {
+  it_exclude_dbs(['oracle'])('does not return sensitive hidden properties', done => {
     const options = Object.assign({}, masterKeyOptions, {
       body: {
         $match: {
@@ -1305,7 +1305,7 @@ describe('Parse.Query Aggregate testing', () => {
       });
   });
 
-  it_exclude_dbs(['postgres'])('aggregate allow multiple of same stage', async done => {
+  it_exclude_dbs(['postgres', 'oracle'])('aggregate allow multiple of same stage', async done => {
     await reconfigureServer({ silent: false });
     const pointer1 = new TestObject({ value: 1 });
     const pointer2 = new TestObject({ value: 2 });

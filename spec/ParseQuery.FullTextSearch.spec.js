@@ -30,7 +30,7 @@ const fullTextHelper = async () => {
 };
 
 describe('Parse.Query Full Text Search testing', () => {
-  it('fullTextSearch: $search', async () => {
+  it_exclude_dbs(['oracle'])('fullTextSearch: $search', async () => {
     await fullTextHelper();
     const query = new Parse.Query('TestObject');
     query.fullText('subject', 'coffee');
@@ -38,7 +38,7 @@ describe('Parse.Query Full Text Search testing', () => {
     expect(results.length).toBe(3);
   });
 
-  it('fullTextSearch: $search, sort', async () => {
+  it_exclude_dbs(['oracle'])('fullTextSearch: $search, sort', async () => {
     await fullTextHelper();
     const query = new Parse.Query('TestObject');
     query.fullText('subject', 'coffee');
@@ -51,7 +51,7 @@ describe('Parse.Query Full Text Search testing', () => {
     expect(results[2].get('score'));
   });
 
-  it('fulltext descending by $score', async () => {
+  it_exclude_dbs(['oracle'])('fulltext descending by $score', async () => {
     await fullTextHelper();
     const query = new Parse.Query('TestObject');
     query.fullText('subject', 'coffee');
@@ -68,7 +68,7 @@ describe('Parse.Query Full Text Search testing', () => {
     expect(second.get('score') >= third.get('score')).toBeTrue();
   });
 
-  it('fullTextSearch: $language', async () => {
+  it_exclude_dbs(['oracle'])('fullTextSearch: $language', async () => {
     await fullTextHelper();
     const query = new Parse.Query('TestObject');
     query.fullText('subject', 'leche', { language: 'spanish' });
@@ -76,7 +76,7 @@ describe('Parse.Query Full Text Search testing', () => {
     expect(resp.length).toBe(2);
   });
 
-  it('fullTextSearch: $diacriticSensitive', async () => {
+  it_exclude_dbs(['oracle'])('fullTextSearch: $diacriticSensitive', async () => {
     await fullTextHelper();
     const query = new Parse.Query('TestObject');
     query.fullText('subject', 'CAFÉ', { diacriticSensitive: true });
@@ -84,7 +84,7 @@ describe('Parse.Query Full Text Search testing', () => {
     expect(resp.length).toBe(1);
   });
 
-  it('fullTextSearch: $search, invalid input', async () => {
+  it_exclude_dbs(['oracle'])('fullTextSearch: $search, invalid input', async () => {
     await fullTextHelper();
     const invalidQuery = async () => {
       const where = {
@@ -114,7 +114,7 @@ describe('Parse.Query Full Text Search testing', () => {
     );
   });
 
-  it('fullTextSearch: $language, invalid input', async () => {
+  it_exclude_dbs(['oracle'])('fullTextSearch: $language, invalid input', async () => {
     await fullTextHelper();
     const query = new Parse.Query('TestObject');
     query.fullText('subject', 'leche', { language: true });
@@ -123,7 +123,7 @@ describe('Parse.Query Full Text Search testing', () => {
     );
   });
 
-  it('fullTextSearch: $caseSensitive, invalid input', async () => {
+  it_exclude_dbs(['oracle'])('fullTextSearch: $caseSensitive, invalid input', async () => {
     await fullTextHelper();
     const query = new Parse.Query('TestObject');
     query.fullText('subject', 'leche', { caseSensitive: 'string' });
@@ -132,7 +132,7 @@ describe('Parse.Query Full Text Search testing', () => {
     );
   });
 
-  it('fullTextSearch: $diacriticSensitive, invalid input', async () => {
+  it_exclude_dbs(['oracle'])('fullTextSearch: $diacriticSensitive, invalid input', async () => {
     await fullTextHelper();
     const query = new Parse.Query('TestObject');
     query.fullText('subject', 'leche', { diacriticSensitive: 'string' });

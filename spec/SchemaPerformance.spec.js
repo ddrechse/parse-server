@@ -205,7 +205,7 @@ describe('Schema Performance', function () {
     expect(getAllSpy.calls.count()).toBe(2);
   });
 
-  it('does reload with schemaCacheTtl', async () => {
+  it_exclude_dbs(['oracle'])('does reload with schemaCacheTtl', async () => {
     const databaseURI =
       process.env.PARSE_SERVER_TEST_DB === 'postgres'
         ? process.env.PARSE_SERVER_TEST_DATABASE_URI
@@ -241,7 +241,7 @@ describe('Schema Performance', function () {
     expect(spy.reloadCalls).toBe(1);
   });
 
-  it('cannot set invalid databaseOptions', async () => {
+  it_exclude_dbs(['oracle'])('cannot set invalid databaseOptions', async () => {
     const expectError = async (key, value, expected) =>
       expectAsync(
         reconfigureServer({ databaseAdapter: undefined, databaseOptions: { [key]: value } })

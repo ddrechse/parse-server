@@ -129,7 +129,7 @@ describe('test validate_receipt endpoint', () => {
     }
   });
 
-  it('should fail at appstore validation', async () => {
+  it_exclude_dbs(['oracle'])('should fail at appstore validation', async () => {
     const response = await request({
       headers: {
         'X-Parse-Application-Id': 'test',

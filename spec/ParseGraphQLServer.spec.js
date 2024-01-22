@@ -1392,69 +1392,75 @@ describe('ParseGraphQLServer', () => {
           await resetGraphQLCache();
         });
 
-        it('should only include types in the enabledForClasses list', async () => {
-          const schemaController = await parseServer.config.databaseController.loadSchema();
-          await schemaController.addClassIfNotExists('SuperCar', {
-            foo: { type: 'String' },
-          });
+        it_exclude_dbs(['oracle'])(
+          'should only include types in the enabledForClasses list',
+          async () => {
+            const schemaController = await parseServer.config.databaseController.loadSchema();
+            await schemaController.addClassIfNotExists('SuperCar', {
+              foo: { type: 'String' },
+            });
 
-          const graphQLConfig = {
-            enabledForClasses: ['SuperCar'],
-          };
-          await parseGraphQLServer.setGraphQLConfig(graphQLConfig);
-          await resetGraphQLCache();
+            const graphQLConfig = {
+              enabledForClasses: ['SuperCar'],
+            };
+            await parseGraphQLServer.setGraphQLConfig(graphQLConfig);
+            await resetGraphQLCache();
 
-          const { data } = await apolloClient.query({
-            query: gql`
-              query UserType {
-                userType: __type(name: "User") {
-                  fields {
-                    name
+            const { data } = await apolloClient.query({
+              query: gql`
+                query UserType {
+                  userType: __type(name: "User") {
+                    fields {
+                      name
+                    }
+                  }
+                  superCarType: __type(name: "SuperCar") {
+                    fields {
+                      name
+                    }
                   }
                 }
-                superCarType: __type(name: "SuperCar") {
-                  fields {
-                    name
-                  }
-                }
-              }
-            `,
-          });
-          expect(data.userType).toBeNull();
-          expect(data.superCarType).toBeTruthy();
-        });
-        it('should not include types in the disabledForClasses list', async () => {
-          const schemaController = await parseServer.config.databaseController.loadSchema();
-          await schemaController.addClassIfNotExists('SuperCar', {
-            foo: { type: 'String' },
-          });
+              `,
+            });
+            expect(data.userType).toBeNull();
+            expect(data.superCarType).toBeTruthy();
+          }
+        );
+        it_exclude_dbs(['oracle'])(
+          'should not include types in the disabledForClasses list',
+          async () => {
+            const schemaController = await parseServer.config.databaseController.loadSchema();
+            await schemaController.addClassIfNotExists('SuperCar', {
+              foo: { type: 'String' },
+            });
 
-          const graphQLConfig = {
-            disabledForClasses: ['SuperCar'],
-          };
-          await parseGraphQLServer.setGraphQLConfig(graphQLConfig);
-          await resetGraphQLCache();
+            const graphQLConfig = {
+              disabledForClasses: ['SuperCar'],
+            };
+            await parseGraphQLServer.setGraphQLConfig(graphQLConfig);
+            await resetGraphQLCache();
 
-          const { data } = await apolloClient.query({
-            query: gql`
-              query UserType {
-                userType: __type(name: "User") {
-                  fields {
-                    name
+            const { data } = await apolloClient.query({
+              query: gql`
+                query UserType {
+                  userType: __type(name: "User") {
+                    fields {
+                      name
+                    }
+                  }
+                  superCarType: __type(name: "SuperCar") {
+                    fields {
+                      name
+                    }
                   }
                 }
-                superCarType: __type(name: "SuperCar") {
-                  fields {
-                    name
-                  }
-                }
-              }
-            `,
-          });
-          expect(data.superCarType).toBeNull();
-          expect(data.userType).toBeTruthy();
-        });
-        it('should remove query operations when disabled', async () => {
+              `,
+            });
+            expect(data.superCarType).toBeNull();
+            expect(data.userType).toBeTruthy();
+          }
+        );
+        it_exclude_dbs(['oracle'])('should remove query operations when disabled', async () => {
           const superCar = new Parse.Object('SuperCar');
           await superCar.save({ foo: 'bar' });
           const customer = new Parse.Object('Customer');
@@ -1560,133 +1566,46 @@ describe('ParseGraphQLServer', () => {
           ).toBeRejected();
         });
 
-        it('should remove mutation operations, create, update and delete, when disabled', async () => {
-          const superCar1 = new Parse.Object('SuperCar');
-          await superCar1.save({ foo: 'bar' });
-          const customer1 = new Parse.Object('Customer');
-          await customer1.save({ foo: 'bar' });
+        it_exclude_dbs(['oracle'])(
+          'should remove mutation operations, create, update and delete, when disabled',
+          async () => {
+            const superCar1 = new Parse.Object('SuperCar');
+            await superCar1.save({ foo: 'bar' });
+            const customer1 = new Parse.Object('Customer');
+            await customer1.save({ foo: 'bar' });
 
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                mutation UpdateSuperCar($id: ID!, $foo: String!) {
-                  updateSuperCar(input: { id: $id, fields: { foo: $foo } }) {
-                    clientMutationId
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation UpdateSuperCar($id: ID!, $foo: String!) {
+                    updateSuperCar(input: { id: $id, fields: { foo: $foo } }) {
+                      clientMutationId
+                    }
                   }
-                }
-              `,
-              variables: {
-                id: superCar1.id,
-                foo: 'lah',
-              },
-            })
-          ).toBeResolved();
-
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                mutation DeleteCustomer($id: ID!) {
-                  deleteCustomer(input: { id: $id }) {
-                    clientMutationId
-                  }
-                }
-              `,
-              variables: {
-                id: customer1.id,
-              },
-            })
-          ).toBeResolved();
-
-          const { data: customerData } = await apolloClient.query({
-            query: gql`
-              mutation CreateCustomer($foo: String!) {
-                createCustomer(input: { fields: { foo: $foo } }) {
-                  customer {
-                    id
-                  }
-                }
-              }
-            `,
-            variables: {
-              foo: 'rah',
-            },
-          });
-          expect(customerData.createCustomer.customer).toBeTruthy();
-
-          // used later
-          const customer2Id = customerData.createCustomer.customer.id;
-
-          await parseGraphQLServer.setGraphQLConfig({
-            classConfigs: [
-              {
-                className: 'SuperCar',
-                mutation: {
-                  create: true,
-                  update: false,
-                  destroy: true,
+                `,
+                variables: {
+                  id: superCar1.id,
+                  foo: 'lah',
                 },
-              },
-              {
-                className: 'Customer',
-                mutation: {
-                  create: false,
-                  update: true,
-                  destroy: false,
+              })
+            ).toBeResolved();
+
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation DeleteCustomer($id: ID!) {
+                    deleteCustomer(input: { id: $id }) {
+                      clientMutationId
+                    }
+                  }
+                `,
+                variables: {
+                  id: customer1.id,
                 },
-              },
-            ],
-          });
-          await resetGraphQLCache();
+              })
+            ).toBeResolved();
 
-          const { data: superCarData } = await apolloClient.query({
-            query: gql`
-              mutation CreateSuperCar($foo: String!) {
-                createSuperCar(input: { fields: { foo: $foo } }) {
-                  superCar {
-                    id
-                  }
-                }
-              }
-            `,
-            variables: {
-              foo: 'mah',
-            },
-          });
-          expect(superCarData.createSuperCar).toBeTruthy();
-          const superCar3Id = superCarData.createSuperCar.superCar.id;
-
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                mutation UpdateSupercar($id: ID!, $foo: String!) {
-                  updateSuperCar(input: { id: $id, fields: { foo: $foo } }) {
-                    clientMutationId
-                  }
-                }
-              `,
-              variables: {
-                id: superCar3Id,
-              },
-            })
-          ).toBeRejected();
-
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                mutation DeleteSuperCar($id: ID!) {
-                  deleteSuperCar(input: { id: $id }) {
-                    clientMutationId
-                  }
-                }
-              `,
-              variables: {
-                id: superCar3Id,
-              },
-            })
-          ).toBeResolved();
-
-          await expectAsync(
-            apolloClient.query({
+            const { data: customerData } = await apolloClient.query({
               query: gql`
                 mutation CreateCustomer($foo: String!) {
                   createCustomer(input: { fields: { foo: $foo } }) {
@@ -1699,311 +1618,289 @@ describe('ParseGraphQLServer', () => {
               variables: {
                 foo: 'rah',
               },
-            })
-          ).toBeRejected();
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                mutation UpdateCustomer($id: ID!, $foo: String!) {
-                  updateCustomer(input: { id: $id, fields: { foo: $foo } }) {
-                    clientMutationId
-                  }
-                }
-              `,
-              variables: {
-                id: customer2Id,
-                foo: 'tah',
-              },
-            })
-          ).toBeResolved();
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                mutation DeleteCustomer($id: ID!, $foo: String!) {
-                  deleteCustomer(input: { id: $id }) {
-                    clientMutationId
-                  }
-                }
-              `,
-              variables: {
-                id: customer2Id,
-              },
-            })
-          ).toBeRejected();
-        });
+            });
+            expect(customerData.createCustomer.customer).toBeTruthy();
 
-        it('should only allow the supplied create and update fields for a class', async () => {
-          const schemaController = await parseServer.config.databaseController.loadSchema();
-          await schemaController.addClassIfNotExists('SuperCar', {
-            engine: { type: 'String' },
-            doors: { type: 'Number' },
-            price: { type: 'String' },
-            mileage: { type: 'Number' },
-          });
+            // used later
+            const customer2Id = customerData.createCustomer.customer.id;
 
-          await parseGraphQLServer.setGraphQLConfig({
-            classConfigs: [
-              {
-                className: 'SuperCar',
-                type: {
-                  inputFields: {
-                    create: ['engine', 'doors', 'price'],
-                    update: ['price', 'mileage'],
+            await parseGraphQLServer.setGraphQLConfig({
+              classConfigs: [
+                {
+                  className: 'SuperCar',
+                  mutation: {
+                    create: true,
+                    update: false,
+                    destroy: true,
                   },
                 },
-              },
-            ],
-          });
+                {
+                  className: 'Customer',
+                  mutation: {
+                    create: false,
+                    update: true,
+                    destroy: false,
+                  },
+                },
+              ],
+            });
+            await resetGraphQLCache();
 
-          await resetGraphQLCache();
-
-          await expectAsync(
-            apolloClient.query({
+            const { data: superCarData } = await apolloClient.query({
               query: gql`
-                mutation InvalidCreateSuperCar {
-                  createSuperCar(input: { fields: { engine: "diesel", mileage: 1000 } }) {
+                mutation CreateSuperCar($foo: String!) {
+                  createSuperCar(input: { fields: { foo: $foo } }) {
                     superCar {
                       id
                     }
                   }
                 }
               `,
-            })
-          ).toBeRejected();
-          const { id: superCarId } = (
-            await apolloClient.query({
-              query: gql`
-                mutation ValidCreateSuperCar {
-                  createSuperCar(
-                    input: { fields: { engine: "diesel", doors: 5, price: "£10000" } }
-                  ) {
-                    superCar {
-                      id
-                    }
-                  }
-                }
-              `,
-            })
-          ).data.createSuperCar.superCar;
-
-          expect(superCarId).toBeTruthy();
-
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                mutation InvalidUpdateSuperCar($id: ID!) {
-                  updateSuperCar(input: { id: $id, fields: { engine: "petrol" } }) {
-                    clientMutationId
-                  }
-                }
-              `,
               variables: {
-                id: superCarId,
+                foo: 'mah',
               },
-            })
-          ).toBeRejected();
+            });
+            expect(superCarData.createSuperCar).toBeTruthy();
+            const superCar3Id = superCarData.createSuperCar.superCar.id;
 
-          const updatedSuperCar = (
-            await apolloClient.query({
-              query: gql`
-                mutation ValidUpdateSuperCar($id: ID!) {
-                  updateSuperCar(input: { id: $id, fields: { mileage: 2000 } }) {
-                    clientMutationId
-                  }
-                }
-              `,
-              variables: {
-                id: superCarId,
-              },
-            })
-          ).data.updateSuperCar;
-          expect(updatedSuperCar).toBeTruthy();
-        });
-
-        it('should handle required fields from the Parse class', async () => {
-          const schemaController = await parseServer.config.databaseController.loadSchema();
-          await schemaController.addClassIfNotExists('SuperCar', {
-            engine: { type: 'String', required: true },
-            doors: { type: 'Number', required: true },
-            price: { type: 'String' },
-            mileage: { type: 'Number' },
-          });
-
-          await resetGraphQLCache();
-
-          const {
-            data: { __type },
-          } = await apolloClient.query({
-            query: gql`
-              query requiredFields {
-                __type(name: "CreateSuperCarFieldsInput") {
-                  inputFields {
-                    name
-                    type {
-                      kind
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation UpdateSupercar($id: ID!, $foo: String!) {
+                    updateSuperCar(input: { id: $id, fields: { foo: $foo } }) {
+                      clientMutationId
                     }
                   }
-                }
-              }
-            `,
-          });
-          expect(__type.inputFields.find(o => o.name === 'price').type.kind).toEqual('SCALAR');
-          expect(__type.inputFields.find(o => o.name === 'engine').type.kind).toEqual('NON_NULL');
-          expect(__type.inputFields.find(o => o.name === 'doors').type.kind).toEqual('NON_NULL');
-
-          const {
-            data: { __type: __type2 },
-          } = await apolloClient.query({
-            query: gql`
-              query requiredFields {
-                __type(name: "SuperCar") {
-                  fields {
-                    name
-                    type {
-                      kind
-                    }
-                  }
-                }
-              }
-            `,
-          });
-          expect(__type2.fields.find(o => o.name === 'price').type.kind).toEqual('SCALAR');
-          expect(__type2.fields.find(o => o.name === 'engine').type.kind).toEqual('NON_NULL');
-          expect(__type2.fields.find(o => o.name === 'doors').type.kind).toEqual('NON_NULL');
-        });
-
-        it('should only allow the supplied output fields for a class', async () => {
-          const schemaController = await parseServer.config.databaseController.loadSchema();
-
-          await schemaController.addClassIfNotExists('SuperCar', {
-            engine: { type: 'String' },
-            doors: { type: 'Number' },
-            price: { type: 'String' },
-            mileage: { type: 'Number' },
-            insuranceClaims: { type: 'Number' },
-          });
-
-          const superCar = await new Parse.Object('SuperCar').save({
-            engine: 'petrol',
-            doors: 3,
-            price: '£7500',
-            mileage: 0,
-            insuranceCertificate: 'private-file.pdf',
-          });
-
-          await parseGraphQLServer.setGraphQLConfig({
-            classConfigs: [
-              {
-                className: 'SuperCar',
-                type: {
-                  outputFields: ['engine', 'doors', 'price', 'mileage'],
+                `,
+                variables: {
+                  id: superCar3Id,
                 },
-              },
-            ],
-          });
+              })
+            ).toBeRejected();
 
-          await resetGraphQLCache();
-
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query GetSuperCar($id: ID!) {
-                  superCar(id: $id) {
-                    id
-                    objectId
-                    engine
-                    doors
-                    price
-                    mileage
-                    insuranceCertificate
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation DeleteSuperCar($id: ID!) {
+                    deleteSuperCar(input: { id: $id }) {
+                      clientMutationId
+                    }
                   }
-                }
-              `,
-              variables: {
-                id: superCar.id,
-              },
-            })
-          ).toBeRejected();
-          let getSuperCar = (
-            await apolloClient.query({
-              query: gql`
-                query GetSuperCar($id: ID!) {
-                  superCar(id: $id) {
-                    id
-                    objectId
-                    engine
-                    doors
-                    price
-                    mileage
-                  }
-                }
-              `,
-              variables: {
-                id: superCar.id,
-              },
-            })
-          ).data.superCar;
-          expect(getSuperCar).toBeTruthy();
-
-          await parseGraphQLServer.setGraphQLConfig({
-            classConfigs: [
-              {
-                className: 'SuperCar',
-                type: {
-                  outputFields: [],
+                `,
+                variables: {
+                  id: superCar3Id,
                 },
-              },
-            ],
-          });
+              })
+            ).toBeResolved();
 
-          await resetGraphQLCache();
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query GetSuperCar($id: ID!) {
-                  superCar(id: $id) {
-                    engine
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation CreateCustomer($foo: String!) {
+                    createCustomer(input: { fields: { foo: $foo } }) {
+                      customer {
+                        id
+                      }
+                    }
                   }
-                }
-              `,
-              variables: {
-                id: superCar.id,
-              },
-            })
-          ).toBeRejected();
-          getSuperCar = (
-            await apolloClient.query({
-              query: gql`
-                query GetSuperCar($id: ID!) {
-                  superCar(id: $id) {
-                    id
-                    objectId
+                `,
+                variables: {
+                  foo: 'rah',
+                },
+              })
+            ).toBeRejected();
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation UpdateCustomer($id: ID!, $foo: String!) {
+                    updateCustomer(input: { id: $id, fields: { foo: $foo } }) {
+                      clientMutationId
+                    }
                   }
-                }
-              `,
-              variables: {
-                id: superCar.id,
-              },
-            })
-          ).data.superCar;
-          expect(getSuperCar.objectId).toBe(superCar.id);
-        });
+                `,
+                variables: {
+                  id: customer2Id,
+                  foo: 'tah',
+                },
+              })
+            ).toBeResolved();
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation DeleteCustomer($id: ID!, $foo: String!) {
+                    deleteCustomer(input: { id: $id }) {
+                      clientMutationId
+                    }
+                  }
+                `,
+                variables: {
+                  id: customer2Id,
+                },
+              })
+            ).toBeRejected();
+          }
+        );
 
-        it('should only allow the supplied constraint fields for a class', async () => {
-          try {
+        it_exclude_dbs(['oracle'])(
+          'should only allow the supplied create and update fields for a class',
+          async () => {
             const schemaController = await parseServer.config.databaseController.loadSchema();
-
             await schemaController.addClassIfNotExists('SuperCar', {
-              model: { type: 'String' },
               engine: { type: 'String' },
               doors: { type: 'Number' },
               price: { type: 'String' },
               mileage: { type: 'Number' },
-              insuranceCertificate: { type: 'String' },
             });
 
-            await new Parse.Object('SuperCar').save({
-              model: 'McLaren',
+            await parseGraphQLServer.setGraphQLConfig({
+              classConfigs: [
+                {
+                  className: 'SuperCar',
+                  type: {
+                    inputFields: {
+                      create: ['engine', 'doors', 'price'],
+                      update: ['price', 'mileage'],
+                    },
+                  },
+                },
+              ],
+            });
+
+            await resetGraphQLCache();
+
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation InvalidCreateSuperCar {
+                    createSuperCar(input: { fields: { engine: "diesel", mileage: 1000 } }) {
+                      superCar {
+                        id
+                      }
+                    }
+                  }
+                `,
+              })
+            ).toBeRejected();
+            const { id: superCarId } = (
+              await apolloClient.query({
+                query: gql`
+                  mutation ValidCreateSuperCar {
+                    createSuperCar(
+                      input: { fields: { engine: "diesel", doors: 5, price: "£10000" } }
+                    ) {
+                      superCar {
+                        id
+                      }
+                    }
+                  }
+                `,
+              })
+            ).data.createSuperCar.superCar;
+
+            expect(superCarId).toBeTruthy();
+
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  mutation InvalidUpdateSuperCar($id: ID!) {
+                    updateSuperCar(input: { id: $id, fields: { engine: "petrol" } }) {
+                      clientMutationId
+                    }
+                  }
+                `,
+                variables: {
+                  id: superCarId,
+                },
+              })
+            ).toBeRejected();
+
+            const updatedSuperCar = (
+              await apolloClient.query({
+                query: gql`
+                  mutation ValidUpdateSuperCar($id: ID!) {
+                    updateSuperCar(input: { id: $id, fields: { mileage: 2000 } }) {
+                      clientMutationId
+                    }
+                  }
+                `,
+                variables: {
+                  id: superCarId,
+                },
+              })
+            ).data.updateSuperCar;
+            expect(updatedSuperCar).toBeTruthy();
+          }
+        );
+
+        it_exclude_dbs(['oracle'])(
+          'should handle required fields from the Parse class',
+          async () => {
+            const schemaController = await parseServer.config.databaseController.loadSchema();
+            await schemaController.addClassIfNotExists('SuperCar', {
+              engine: { type: 'String', required: true },
+              doors: { type: 'Number', required: true },
+              price: { type: 'String' },
+              mileage: { type: 'Number' },
+            });
+
+            await resetGraphQLCache();
+
+            const {
+              data: { __type },
+            } = await apolloClient.query({
+              query: gql`
+                query requiredFields {
+                  __type(name: "CreateSuperCarFieldsInput") {
+                    inputFields {
+                      name
+                      type {
+                        kind
+                      }
+                    }
+                  }
+                }
+              `,
+            });
+            expect(__type.inputFields.find(o => o.name === 'price').type.kind).toEqual('SCALAR');
+            expect(__type.inputFields.find(o => o.name === 'engine').type.kind).toEqual('NON_NULL');
+            expect(__type.inputFields.find(o => o.name === 'doors').type.kind).toEqual('NON_NULL');
+
+            const {
+              data: { __type: __type2 },
+            } = await apolloClient.query({
+              query: gql`
+                query requiredFields {
+                  __type(name: "SuperCar") {
+                    fields {
+                      name
+                      type {
+                        kind
+                      }
+                    }
+                  }
+                }
+              `,
+            });
+            expect(__type2.fields.find(o => o.name === 'price').type.kind).toEqual('SCALAR');
+            expect(__type2.fields.find(o => o.name === 'engine').type.kind).toEqual('NON_NULL');
+            expect(__type2.fields.find(o => o.name === 'doors').type.kind).toEqual('NON_NULL');
+          }
+        );
+
+        it_exclude_dbs(['oracle'])(
+          'should only allow the supplied output fields for a class',
+          async () => {
+            const schemaController = await parseServer.config.databaseController.loadSchema();
+
+            await schemaController.addClassIfNotExists('SuperCar', {
+              engine: { type: 'String' },
+              doors: { type: 'Number' },
+              price: { type: 'String' },
+              mileage: { type: 'Number' },
+              insuranceClaims: { type: 'Number' },
+            });
+
+            const superCar = await new Parse.Object('SuperCar').save({
               engine: 'petrol',
               doors: 3,
               price: '£7500',
@@ -2016,7 +1913,219 @@ describe('ParseGraphQLServer', () => {
                 {
                   className: 'SuperCar',
                   type: {
-                    constraintFields: ['engine', 'doors', 'price'],
+                    outputFields: ['engine', 'doors', 'price', 'mileage'],
+                  },
+                },
+              ],
+            });
+
+            await resetGraphQLCache();
+
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  query GetSuperCar($id: ID!) {
+                    superCar(id: $id) {
+                      id
+                      objectId
+                      engine
+                      doors
+                      price
+                      mileage
+                      insuranceCertificate
+                    }
+                  }
+                `,
+                variables: {
+                  id: superCar.id,
+                },
+              })
+            ).toBeRejected();
+            let getSuperCar = (
+              await apolloClient.query({
+                query: gql`
+                  query GetSuperCar($id: ID!) {
+                    superCar(id: $id) {
+                      id
+                      objectId
+                      engine
+                      doors
+                      price
+                      mileage
+                    }
+                  }
+                `,
+                variables: {
+                  id: superCar.id,
+                },
+              })
+            ).data.superCar;
+            expect(getSuperCar).toBeTruthy();
+
+            await parseGraphQLServer.setGraphQLConfig({
+              classConfigs: [
+                {
+                  className: 'SuperCar',
+                  type: {
+                    outputFields: [],
+                  },
+                },
+              ],
+            });
+
+            await resetGraphQLCache();
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  query GetSuperCar($id: ID!) {
+                    superCar(id: $id) {
+                      engine
+                    }
+                  }
+                `,
+                variables: {
+                  id: superCar.id,
+                },
+              })
+            ).toBeRejected();
+            getSuperCar = (
+              await apolloClient.query({
+                query: gql`
+                  query GetSuperCar($id: ID!) {
+                    superCar(id: $id) {
+                      id
+                      objectId
+                    }
+                  }
+                `,
+                variables: {
+                  id: superCar.id,
+                },
+              })
+            ).data.superCar;
+            expect(getSuperCar.objectId).toBe(superCar.id);
+          }
+        );
+
+        it_exclude_dbs(['oracle'])(
+          'should only allow the supplied constraint fields for a class',
+          async () => {
+            try {
+              const schemaController = await parseServer.config.databaseController.loadSchema();
+
+              await schemaController.addClassIfNotExists('SuperCar', {
+                model: { type: 'String' },
+                engine: { type: 'String' },
+                doors: { type: 'Number' },
+                price: { type: 'String' },
+                mileage: { type: 'Number' },
+                insuranceCertificate: { type: 'String' },
+              });
+
+              await new Parse.Object('SuperCar').save({
+                model: 'McLaren',
+                engine: 'petrol',
+                doors: 3,
+                price: '£7500',
+                mileage: 0,
+                insuranceCertificate: 'private-file.pdf',
+              });
+
+              await parseGraphQLServer.setGraphQLConfig({
+                classConfigs: [
+                  {
+                    className: 'SuperCar',
+                    type: {
+                      constraintFields: ['engine', 'doors', 'price'],
+                    },
+                  },
+                ],
+              });
+
+              await resetGraphQLCache();
+
+              await expectAsync(
+                apolloClient.query({
+                  query: gql`
+                    query FindSuperCar {
+                      superCars(where: { insuranceCertificate: { equalTo: "private-file.pdf" } }) {
+                        count
+                      }
+                    }
+                  `,
+                })
+              ).toBeRejected();
+
+              await expectAsync(
+                apolloClient.query({
+                  query: gql`
+                    query FindSuperCar {
+                      superCars(where: { mileage: { equalTo: 0 } }) {
+                        count
+                      }
+                    }
+                  `,
+                })
+              ).toBeRejected();
+
+              await expectAsync(
+                apolloClient.query({
+                  query: gql`
+                    query FindSuperCar {
+                      superCars(where: { engine: { equalTo: "petrol" } }) {
+                        count
+                      }
+                    }
+                  `,
+                })
+              ).toBeResolved();
+            } catch (e) {
+              handleError(e);
+            }
+          }
+        );
+
+        it_exclude_dbs(['oracle'])(
+          'should only allow the supplied sort fields for a class',
+          async () => {
+            const schemaController = await parseServer.config.databaseController.loadSchema();
+
+            await schemaController.addClassIfNotExists('SuperCar', {
+              engine: { type: 'String' },
+              doors: { type: 'Number' },
+              price: { type: 'String' },
+              mileage: { type: 'Number' },
+            });
+
+            await new Parse.Object('SuperCar').save({
+              engine: 'petrol',
+              doors: 3,
+              price: '£7500',
+              mileage: 0,
+            });
+
+            await parseGraphQLServer.setGraphQLConfig({
+              classConfigs: [
+                {
+                  className: 'SuperCar',
+                  type: {
+                    sortFields: [
+                      {
+                        field: 'doors',
+                        asc: true,
+                        desc: true,
+                      },
+                      {
+                        field: 'price',
+                        asc: true,
+                        desc: true,
+                      },
+                      {
+                        field: 'mileage',
+                        asc: true,
+                        desc: false,
+                      },
+                    ],
                   },
                 },
               ],
@@ -2028,8 +2137,42 @@ describe('ParseGraphQLServer', () => {
               apolloClient.query({
                 query: gql`
                   query FindSuperCar {
-                    superCars(where: { insuranceCertificate: { equalTo: "private-file.pdf" } }) {
-                      count
+                    superCars(order: [engine_ASC]) {
+                      edges {
+                        node {
+                          id
+                        }
+                      }
+                    }
+                  }
+                `,
+              })
+            ).toBeRejected();
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  query FindSuperCar {
+                    superCars(order: [engine_DESC]) {
+                      edges {
+                        node {
+                          id
+                        }
+                      }
+                    }
+                  }
+                `,
+              })
+            ).toBeRejected();
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  query FindSuperCar {
+                    superCars(order: [mileage_DESC]) {
+                      edges {
+                        node {
+                          id
+                        }
+                      }
                     }
                   }
                 `,
@@ -2040,183 +2183,64 @@ describe('ParseGraphQLServer', () => {
               apolloClient.query({
                 query: gql`
                   query FindSuperCar {
-                    superCars(where: { mileage: { equalTo: 0 } }) {
-                      count
-                    }
-                  }
-                `,
-              })
-            ).toBeRejected();
-
-            await expectAsync(
-              apolloClient.query({
-                query: gql`
-                  query FindSuperCar {
-                    superCars(where: { engine: { equalTo: "petrol" } }) {
-                      count
+                    superCars(order: [mileage_ASC]) {
+                      edges {
+                        node {
+                          id
+                        }
+                      }
                     }
                   }
                 `,
               })
             ).toBeResolved();
-          } catch (e) {
-            handleError(e);
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  query FindSuperCar {
+                    superCars(order: [doors_ASC]) {
+                      edges {
+                        node {
+                          id
+                        }
+                      }
+                    }
+                  }
+                `,
+              })
+            ).toBeResolved();
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  query FindSuperCar {
+                    superCars(order: [price_DESC]) {
+                      edges {
+                        node {
+                          id
+                        }
+                      }
+                    }
+                  }
+                `,
+              })
+            ).toBeResolved();
+            await expectAsync(
+              apolloClient.query({
+                query: gql`
+                  query FindSuperCar {
+                    superCars(order: [price_ASC, doors_DESC]) {
+                      edges {
+                        node {
+                          id
+                        }
+                      }
+                    }
+                  }
+                `,
+              })
+            ).toBeResolved();
           }
-        });
-
-        it('should only allow the supplied sort fields for a class', async () => {
-          const schemaController = await parseServer.config.databaseController.loadSchema();
-
-          await schemaController.addClassIfNotExists('SuperCar', {
-            engine: { type: 'String' },
-            doors: { type: 'Number' },
-            price: { type: 'String' },
-            mileage: { type: 'Number' },
-          });
-
-          await new Parse.Object('SuperCar').save({
-            engine: 'petrol',
-            doors: 3,
-            price: '£7500',
-            mileage: 0,
-          });
-
-          await parseGraphQLServer.setGraphQLConfig({
-            classConfigs: [
-              {
-                className: 'SuperCar',
-                type: {
-                  sortFields: [
-                    {
-                      field: 'doors',
-                      asc: true,
-                      desc: true,
-                    },
-                    {
-                      field: 'price',
-                      asc: true,
-                      desc: true,
-                    },
-                    {
-                      field: 'mileage',
-                      asc: true,
-                      desc: false,
-                    },
-                  ],
-                },
-              },
-            ],
-          });
-
-          await resetGraphQLCache();
-
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query FindSuperCar {
-                  superCars(order: [engine_ASC]) {
-                    edges {
-                      node {
-                        id
-                      }
-                    }
-                  }
-                }
-              `,
-            })
-          ).toBeRejected();
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query FindSuperCar {
-                  superCars(order: [engine_DESC]) {
-                    edges {
-                      node {
-                        id
-                      }
-                    }
-                  }
-                }
-              `,
-            })
-          ).toBeRejected();
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query FindSuperCar {
-                  superCars(order: [mileage_DESC]) {
-                    edges {
-                      node {
-                        id
-                      }
-                    }
-                  }
-                }
-              `,
-            })
-          ).toBeRejected();
-
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query FindSuperCar {
-                  superCars(order: [mileage_ASC]) {
-                    edges {
-                      node {
-                        id
-                      }
-                    }
-                  }
-                }
-              `,
-            })
-          ).toBeResolved();
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query FindSuperCar {
-                  superCars(order: [doors_ASC]) {
-                    edges {
-                      node {
-                        id
-                      }
-                    }
-                  }
-                }
-              `,
-            })
-          ).toBeResolved();
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query FindSuperCar {
-                  superCars(order: [price_DESC]) {
-                    edges {
-                      node {
-                        id
-                      }
-                    }
-                  }
-                }
-              `,
-            })
-          ).toBeResolved();
-          await expectAsync(
-            apolloClient.query({
-              query: gql`
-                query FindSuperCar {
-                  superCars(order: [price_ASC, doors_DESC]) {
-                    edges {
-                      node {
-                        id
-                      }
-                    }
-                  }
-                }
-              `,
-            })
-          ).toBeResolved();
-        });
+        );
       });
 
       describe('Relay Spec', () => {
@@ -4918,7 +4942,7 @@ describe('ParseGraphQLServer', () => {
             ).toEqual(['someValue1', 'someValue2']);
           });
 
-          it('should support full text search', async () => {
+          it_exclude_dbs(['oracle'])('should support full text search', async () => {
             try {
               const obj = new Parse.Object('FullTextSearchTest');
               obj.set('field1', 'Parse GraphQL Server');
@@ -5029,7 +5053,7 @@ describe('ParseGraphQLServer', () => {
             }
           });
 
-          it('should support order, skip and first arguments', async () => {
+          it_exclude_dbs(['oracle'])('should support order, skip and first arguments', async () => {
             const promises = [];
             for (let i = 0; i < 100; i++) {
               const obj = new Parse.Object('SomeClass');
@@ -5076,7 +5100,7 @@ describe('ParseGraphQLServer', () => {
             ]);
           });
 
-          it('should support pagination', async () => {
+          it_exclude_dbs(['oracle'])('should support pagination', async () => {
             const numberArray = (first, last) => {
               const array = [];
               for (let i = first; i <= last; i++) {
@@ -5275,6 +5299,7 @@ describe('ParseGraphQLServer', () => {
 
           it('should only count', async () => {
             await prepareData();
+
             await parseGraphQLServer.parseGraphQLSchema.schemaCache.clear();
 
             const where = {
@@ -5682,7 +5707,7 @@ describe('ParseGraphQLServer', () => {
             });
           });
 
-          it('should order by multiple fields', async () => {
+          it_exclude_dbs(['oracle'])('should order by multiple fields', async () => {
             await prepareData();
 
             await resetGraphQLCache();
@@ -5768,7 +5793,7 @@ describe('ParseGraphQLServer', () => {
             ).toEqual([object3.id, object1.id, object2.id]);
           });
 
-          it('should support including relation', async () => {
+          it_exclude_dbs(['oracle'])('should support including relation', async () => {
             await prepareData();
 
             await parseGraphQLServer.parseGraphQLSchema.schemaCache.clear();
@@ -6673,161 +6698,164 @@ describe('ParseGraphQLServer', () => {
           });
         });
 
-        it('should unset fields when null used on update/create', async () => {
-          const customerSchema = new Parse.Schema('Customer');
-          customerSchema.addString('aString');
-          customerSchema.addBoolean('aBoolean');
-          customerSchema.addDate('aDate');
-          customerSchema.addArray('aArray');
-          customerSchema.addGeoPoint('aGeoPoint');
-          customerSchema.addPointer('aPointer', 'Customer');
-          customerSchema.addObject('aObject');
-          customerSchema.addPolygon('aPolygon');
-          await customerSchema.save();
+        it_exclude_dbs(['oracle'])(
+          'should unset fields when null used on update/create',
+          async () => {
+            const customerSchema = new Parse.Schema('Customer');
+            customerSchema.addString('aString');
+            customerSchema.addBoolean('aBoolean');
+            customerSchema.addDate('aDate');
+            customerSchema.addArray('aArray');
+            customerSchema.addGeoPoint('aGeoPoint');
+            customerSchema.addPointer('aPointer', 'Customer');
+            customerSchema.addObject('aObject');
+            customerSchema.addPolygon('aPolygon');
+            await customerSchema.save();
 
-          await parseGraphQLServer.parseGraphQLSchema.schemaCache.clear();
+            await parseGraphQLServer.parseGraphQLSchema.schemaCache.clear();
 
-          const cus = new Parse.Object('Customer');
-          await cus.save({ aString: 'hello' });
+            const cus = new Parse.Object('Customer');
+            await cus.save({ aString: 'hello' });
 
-          const fields = {
-            aString: "i'm string",
-            aBoolean: true,
-            aDate: new Date().toISOString(),
-            aArray: ['hello', 1],
-            aGeoPoint: { latitude: 30, longitude: 30 },
-            aPointer: { link: cus.id },
-            aObject: { prop: { subprop: 1 }, prop2: 'test' },
-            aPolygon: [
-              { latitude: 30, longitude: 30 },
-              { latitude: 31, longitude: 31 },
-              { latitude: 32, longitude: 32 },
-              { latitude: 30, longitude: 30 },
-            ],
-          };
-          const nullFields = Object.keys(fields).reduce((acc, k) => ({ ...acc, [k]: null }), {});
-          const result = await apolloClient.mutate({
-            mutation: gql`
-              mutation CreateCustomer($input: CreateCustomerInput!) {
-                createCustomer(input: $input) {
-                  customer {
-                    id
-                    aString
-                    aBoolean
-                    aDate
-                    aArray {
-                      ... on Element {
-                        value
+            const fields = {
+              aString: "i'm string",
+              aBoolean: true,
+              aDate: new Date().toISOString(),
+              aArray: ['hello', 1],
+              aGeoPoint: { latitude: 30, longitude: 30 },
+              aPointer: { link: cus.id },
+              aObject: { prop: { subprop: 1 }, prop2: 'test' },
+              aPolygon: [
+                { latitude: 30, longitude: 30 },
+                { latitude: 31, longitude: 31 },
+                { latitude: 32, longitude: 32 },
+                { latitude: 30, longitude: 30 },
+              ],
+            };
+            const nullFields = Object.keys(fields).reduce((acc, k) => ({ ...acc, [k]: null }), {});
+            const result = await apolloClient.mutate({
+              mutation: gql`
+                mutation CreateCustomer($input: CreateCustomerInput!) {
+                  createCustomer(input: $input) {
+                    customer {
+                      id
+                      aString
+                      aBoolean
+                      aDate
+                      aArray {
+                        ... on Element {
+                          value
+                        }
                       }
-                    }
-                    aGeoPoint {
-                      longitude
-                      latitude
-                    }
-                    aPointer {
-                      objectId
-                    }
-                    aObject
-                    aPolygon {
-                      longitude
-                      latitude
-                    }
-                  }
-                }
-              }
-            `,
-            variables: {
-              input: { fields },
-            },
-          });
-          const {
-            data: {
-              createCustomer: {
-                customer: { aPointer, aArray, id, ...otherFields },
-              },
-            },
-          } = result;
-          expect(id).toBeDefined();
-          delete otherFields.__typename;
-          delete otherFields.aGeoPoint.__typename;
-          otherFields.aPolygon.forEach(v => {
-            delete v.__typename;
-          });
-          expect({
-            ...otherFields,
-            aPointer: { link: aPointer.objectId },
-            aArray: aArray.map(({ value }) => value),
-          }).toEqual(fields);
-
-          const updated = await apolloClient.mutate({
-            mutation: gql`
-              mutation UpdateCustomer($input: UpdateCustomerInput!) {
-                updateCustomer(input: $input) {
-                  customer {
-                    aString
-                    aBoolean
-                    aDate
-                    aArray {
-                      ... on Element {
-                        value
+                      aGeoPoint {
+                        longitude
+                        latitude
                       }
-                    }
-                    aGeoPoint {
-                      longitude
-                      latitude
-                    }
-                    aPointer {
-                      objectId
-                    }
-                    aObject
-                    aPolygon {
-                      longitude
-                      latitude
-                    }
-                  }
-                }
-              }
-            `,
-            variables: {
-              input: { fields: nullFields, id },
-            },
-          });
-          const {
-            data: {
-              updateCustomer: { customer },
-            },
-          } = updated;
-          delete customer.__typename;
-          expect(Object.keys(customer).length).toEqual(8);
-          Object.keys(customer).forEach(k => {
-            expect(customer[k]).toBeNull();
-          });
-          try {
-            const queryResult = await apolloClient.query({
-              query: gql`
-                query getEmptyCustomer($where: CustomerWhereInput!) {
-                  customers(where: $where) {
-                    edges {
-                      node {
-                        id
+                      aPointer {
+                        objectId
+                      }
+                      aObject
+                      aPolygon {
+                        longitude
+                        latitude
                       }
                     }
                   }
                 }
               `,
               variables: {
-                where: Object.keys(fields).reduce(
-                  (acc, k) => ({ ...acc, [k]: { exists: false } }),
-                  {}
-                ),
+                input: { fields },
               },
             });
+            const {
+              data: {
+                createCustomer: {
+                  customer: { aPointer, aArray, id, ...otherFields },
+                },
+              },
+            } = result;
+            expect(id).toBeDefined();
+            delete otherFields.__typename;
+            delete otherFields.aGeoPoint.__typename;
+            otherFields.aPolygon.forEach(v => {
+              delete v.__typename;
+            });
+            expect({
+              ...otherFields,
+              aPointer: { link: aPointer.objectId },
+              aArray: aArray.map(({ value }) => value),
+            }).toEqual(fields);
 
-            expect(queryResult.data.customers.edges.length).toEqual(1);
-          } catch (e) {
-            console.error(JSON.stringify(e));
+            const updated = await apolloClient.mutate({
+              mutation: gql`
+                mutation UpdateCustomer($input: UpdateCustomerInput!) {
+                  updateCustomer(input: $input) {
+                    customer {
+                      aString
+                      aBoolean
+                      aDate
+                      aArray {
+                        ... on Element {
+                          value
+                        }
+                      }
+                      aGeoPoint {
+                        longitude
+                        latitude
+                      }
+                      aPointer {
+                        objectId
+                      }
+                      aObject
+                      aPolygon {
+                        longitude
+                        latitude
+                      }
+                    }
+                  }
+                }
+              `,
+              variables: {
+                input: { fields: nullFields, id },
+              },
+            });
+            const {
+              data: {
+                updateCustomer: { customer },
+              },
+            } = updated;
+            delete customer.__typename;
+            expect(Object.keys(customer).length).toEqual(8);
+            Object.keys(customer).forEach(k => {
+              expect(customer[k]).toBeNull();
+            });
+            try {
+              const queryResult = await apolloClient.query({
+                query: gql`
+                  query getEmptyCustomer($where: CustomerWhereInput!) {
+                    customers(where: $where) {
+                      edges {
+                        node {
+                          id
+                        }
+                      }
+                    }
+                  }
+                `,
+                variables: {
+                  where: Object.keys(fields).reduce(
+                    (acc, k) => ({ ...acc, [k]: { exists: false } }),
+                    {}
+                  ),
+                },
+              });
+
+              expect(queryResult.data.customers.edges.length).toEqual(1);
+            } catch (e) {
+              console.error(JSON.stringify(e));
+            }
           }
-        });
+        );
       });
 
       describe('Files Mutations', () => {
@@ -8317,7 +8345,7 @@ describe('ParseGraphQLServer', () => {
           expect(schema.fields.updatedAt.type).toEqual('Date');
         });
 
-        it('should support ACL', async () => {
+        it_exclude_dbs(['oracle'])('should support ACL', async () => {
           const someClass = new Parse.Object('SomeClass');
           await someClass.save();
 
@@ -9071,7 +9099,7 @@ describe('ParseGraphQLServer', () => {
           expect(result2.companies.edges[0].node.objectId).toEqual(company1.id);
         });
 
-        it('should support relational where query', async () => {
+        it_exclude_dbs(['oracle'])('should support relational where query', async () => {
           const president = new Parse.Object('President');
           president.set('name', 'James');
           await president.save();
@@ -10145,7 +10173,7 @@ describe('ParseGraphQLServer', () => {
           }
         });
 
-        it('should support Bytes', async () => {
+        it_exclude_dbs(['oracle'])('should support Bytes', async () => {
           try {
             const someFieldValue = 'aGVsbG8gd29ybGQ=';
 
@@ -10232,7 +10260,7 @@ describe('ParseGraphQLServer', () => {
           }
         });
 
-        it('should support Geo Points', async () => {
+        it_exclude_dbs(['oracle'])('should support Geo Points', async () => {
           try {
             const someFieldValue = {
               __typename: 'GeoPoint',
@@ -10387,7 +10415,7 @@ describe('ParseGraphQLServer', () => {
           }
         });
 
-        it('should support Polygons', async () => {
+        it_exclude_dbs(['oracle'])('should support Polygons', async () => {
           try {
             const somePolygonFieldValue = [
               [44, 45],

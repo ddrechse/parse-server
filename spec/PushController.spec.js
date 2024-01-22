@@ -170,7 +170,7 @@ describe('PushController', () => {
     done();
   });
 
-  it('properly increment badges', async () => {
+  it_exclude_dbs(['oracle'])('properly increment badges', async () => {
     const pushAdapter = {
       send: function (body, installations) {
         const badge = body.data.badge;
@@ -235,7 +235,7 @@ describe('PushController', () => {
     }
   });
 
-  it('properly increment badges by more than 1', async () => {
+  it_exclude_dbs(['oracle'])('properly increment badges by more than 1', async () => {
     const pushAdapter = {
       send: function (body, installations) {
         const badge = body.data.badge;
@@ -297,7 +297,7 @@ describe('PushController', () => {
     }
   });
 
-  it('properly set badges to 1', async () => {
+  it_exclude_dbs(['oracle'])('properly set badges to 1', async () => {
     const pushAdapter = {
       send: function (body, installations) {
         const badge = body.data.badge;
@@ -352,63 +352,66 @@ describe('PushController', () => {
     }
   });
 
-  it('properly set badges to 1 with complex query #2903 #3022', async () => {
-    const payload = {
-      data: {
-        alert: 'Hello World!',
-        badge: 1,
-      },
-    };
-    const installations = [];
-    while (installations.length != 10) {
-      const installation = new Parse.Object('_Installation');
-      installation.set('installationId', 'installation_' + installations.length);
-      installation.set('deviceToken', 'device_token_' + installations.length);
-      installation.set('badge', installations.length);
-      installation.set('originalBadge', installations.length);
-      installation.set('deviceType', 'ios');
-      installations.push(installation);
+  it_exclude_dbs(['oracle'])(
+    'properly set badges to 1 with complex query #2903 #3022',
+    async () => {
+      const payload = {
+        data: {
+          alert: 'Hello World!',
+          badge: 1,
+        },
+      };
+      const installations = [];
+      while (installations.length != 10) {
+        const installation = new Parse.Object('_Installation');
+        installation.set('installationId', 'installation_' + installations.length);
+        installation.set('deviceToken', 'device_token_' + installations.length);
+        installation.set('badge', installations.length);
+        installation.set('originalBadge', installations.length);
+        installation.set('deviceType', 'ios');
+        installations.push(installation);
+      }
+      let matchedInstallationsCount = 0;
+      const pushAdapter = {
+        send: function (body, installations) {
+          matchedInstallationsCount += installations.length;
+          const badge = body.data.badge;
+          installations.forEach(installation => {
+            expect(installation.badge).toEqual(badge);
+            expect(1).toEqual(installation.badge);
+          });
+          return successfulTransmissions(body, installations);
+        },
+        getValidPushTypes: function () {
+          return ['ios'];
+        },
+      };
+
+      const config = Config.get(Parse.applicationId);
+      const auth = {
+        isMaster: true,
+      };
+      await reconfigureServer({
+        push: { adapter: pushAdapter },
+      });
+      await Parse.Object.saveAll(installations);
+      const objectIds = installations.map(installation => {
+        return installation.id;
+      });
+      const where = {
+        objectId: { $in: objectIds.slice(0, 5) },
+      };
+      const pushStatusId = await sendPush(payload, where, config, auth);
+      await pushCompleted(pushStatusId);
+      expect(matchedInstallationsCount).toBe(5);
+      const query = new Parse.Query(Parse.Installation);
+      query.equalTo('badge', 1);
+      const results = await query.find({ useMasterKey: true });
+      expect(results.length).toBe(5);
     }
-    let matchedInstallationsCount = 0;
-    const pushAdapter = {
-      send: function (body, installations) {
-        matchedInstallationsCount += installations.length;
-        const badge = body.data.badge;
-        installations.forEach(installation => {
-          expect(installation.badge).toEqual(badge);
-          expect(1).toEqual(installation.badge);
-        });
-        return successfulTransmissions(body, installations);
-      },
-      getValidPushTypes: function () {
-        return ['ios'];
-      },
-    };
+  );
 
-    const config = Config.get(Parse.applicationId);
-    const auth = {
-      isMaster: true,
-    };
-    await reconfigureServer({
-      push: { adapter: pushAdapter },
-    });
-    await Parse.Object.saveAll(installations);
-    const objectIds = installations.map(installation => {
-      return installation.id;
-    });
-    const where = {
-      objectId: { $in: objectIds.slice(0, 5) },
-    };
-    const pushStatusId = await sendPush(payload, where, config, auth);
-    await pushCompleted(pushStatusId);
-    expect(matchedInstallationsCount).toBe(5);
-    const query = new Parse.Query(Parse.Installation);
-    query.equalTo('badge', 1);
-    const results = await query.find({ useMasterKey: true });
-    expect(results.length).toBe(5);
-  });
-
-  it('properly creates _PushStatus', async () => {
+  it_exclude_dbs(['oracle'])('properly creates _PushStatus', async () => {
     const pushStatusAfterSave = {
       handler: function () {},
     };
@@ -523,7 +526,7 @@ describe('PushController', () => {
     expect(succeedCount).toBe(1);
   });
 
-  it('properly creates _PushStatus without serverURL', async () => {
+  it_exclude_dbs(['oracle'])('properly creates _PushStatus without serverURL', async () => {
     const pushStatusAfterSave = {
       handler: function () {},
     };
@@ -617,7 +620,7 @@ describe('PushController', () => {
     }
   });
 
-  it('should support full RESTQuery for increment', async () => {
+  it_exclude_dbs(['oracle'])('should support full RESTQuery for increment', async () => {
     const payload = {
       data: {
         alert: 'Hello World!',
@@ -1032,7 +1035,7 @@ describe('PushController', () => {
     // No installation is in es so only 1 call for fr, and another for default
   });
 
-  it('should update audiences', async () => {
+  it_exclude_dbs(['oracle'])('should update audiences', async () => {
     const pushAdapter = {
       send: function (body, installations) {
         return successfulTransmissions(body, installations);

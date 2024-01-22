@@ -113,7 +113,7 @@ const setup = function () {
 };
 
 describe('Parse.Push', () => {
-  it('should properly send push', async () => {
+  it_exclude_dbs(['oracle'])('should properly send push', async () => {
     const { sendToInstallationSpy } = await setup();
     const pushStatusId = await Parse.Push.send({
       where: {
@@ -128,7 +128,7 @@ describe('Parse.Push', () => {
     expect(sendToInstallationSpy.calls.count()).toEqual(10);
   });
 
-  it('should properly send push with lowercaseIncrement', async () => {
+  it_exclude_dbs(['oracle'])('should properly send push with lowercaseIncrement', async () => {
     await setup();
     const pushStatusId = await Parse.Push.send({
       where: {
@@ -142,7 +142,7 @@ describe('Parse.Push', () => {
     await pushCompleted(pushStatusId);
   });
 
-  it('should not allow clients to query _PushStatus', async () => {
+  it_exclude_dbs(['oracle'])('should not allow clients to query _PushStatus', async () => {
     await setup();
     const pushStatusId = await Parse.Push.send({
       where: {
@@ -168,7 +168,7 @@ describe('Parse.Push', () => {
     }
   });
 
-  it('should allow master key to query _PushStatus', async () => {
+  it_exclude_dbs(['oracle'])('should allow master key to query _PushStatus', async () => {
     await setup();
     const pushStatusId = await Parse.Push.send({
       where: {
@@ -194,7 +194,7 @@ describe('Parse.Push', () => {
     expect(body.results[0].payload).toEqual('{"badge":"increment","alert":"Hello world!"}');
   });
 
-  it('should throw error if missing push configuration', async () => {
+  it_exclude_dbs(['oracle'])('should throw error if missing push configuration', async () => {
     await reconfigureServer({ push: null });
     try {
       await Parse.Push.send({
@@ -217,134 +217,146 @@ describe('Parse.Push', () => {
    * Simulates a simple push where 1 installation is removed between _PushStatus
    * count being set and the pushes being sent
    */
-  it("does not get stuck with _PushStatus 'running' on 1 installation lost", async () => {
-    await reconfigureServer({
-      push: { adapter: losingAdapter },
-    });
-    await Parse.Object.saveAll(provideInstallations());
-    const pushStatusId = await Parse.Push.send({
-      data: { alert: 'We fixed our status!' },
-      where: { deviceType: 'android' },
-    });
-    await pushCompleted(pushStatusId);
-    const result = await Parse.Push.getPushStatus(pushStatusId);
-    expect(result.get('status')).toEqual('succeeded');
-    expect(result.get('numSent')).toEqual(1);
-    expect(result.get('count')).toEqual(undefined);
-  });
+  it_exclude_dbs(['oracle'])(
+    "does not get stuck with _PushStatus 'running' on 1 installation lost",
+    async () => {
+      await reconfigureServer({
+        push: { adapter: losingAdapter },
+      });
+      await Parse.Object.saveAll(provideInstallations());
+      const pushStatusId = await Parse.Push.send({
+        data: { alert: 'We fixed our status!' },
+        where: { deviceType: 'android' },
+      });
+      await pushCompleted(pushStatusId);
+      const result = await Parse.Push.getPushStatus(pushStatusId);
+      expect(result.get('status')).toEqual('succeeded');
+      expect(result.get('numSent')).toEqual(1);
+      expect(result.get('count')).toEqual(undefined);
+    }
+  );
 
   /**
    * Verifies that _PushStatus cannot get stuck in a 'running' state
    * Simulates a simple push where 1 installation is added between _PushStatus
    * count being set and the pushes being sent
    */
-  it("does not get stuck with _PushStatus 'running' on 1 installation added", async () => {
-    const installations = provideInstallations();
+  it_exclude_dbs(['oracle'])(
+    "does not get stuck with _PushStatus 'running' on 1 installation added",
+    async () => {
+      const installations = provideInstallations();
 
-    // add 1 iOS installation which we will omit & add later on
-    const iOSInstallation = new Parse.Object('_Installation');
-    iOSInstallation.set('installationId', 'installation_' + installations.length);
-    iOSInstallation.set('deviceToken', 'device_token_' + installations.length);
-    iOSInstallation.set('deviceType', 'ios');
-    installations.push(iOSInstallation);
+      // add 1 iOS installation which we will omit & add later on
+      const iOSInstallation = new Parse.Object('_Installation');
+      iOSInstallation.set('installationId', 'installation_' + installations.length);
+      iOSInstallation.set('deviceToken', 'device_token_' + installations.length);
+      iOSInstallation.set('deviceType', 'ios');
+      installations.push(iOSInstallation);
 
-    await reconfigureServer({
-      push: {
-        adapter: {
-          send: function (body, installations) {
-            // simulate having added an installation before this was called
-            // thus invalidating our 'count' in _PushStatus
-            installations.push(iOSInstallation);
-            return successfulAny(body, installations);
-          },
-          getValidPushTypes: function () {
-            return ['android'];
+      await reconfigureServer({
+        push: {
+          adapter: {
+            send: function (body, installations) {
+              // simulate having added an installation before this was called
+              // thus invalidating our 'count' in _PushStatus
+              installations.push(iOSInstallation);
+              return successfulAny(body, installations);
+            },
+            getValidPushTypes: function () {
+              return ['android'];
+            },
           },
         },
-      },
-    });
-    await Parse.Object.saveAll(installations);
-    const pushStatusId = await Parse.Push.send({
-      data: { alert: 'We fixed our status!' },
-      where: { deviceType: { $ne: 'random' } },
-    });
-    await pushCompleted(pushStatusId);
-    const result = await Parse.Push.getPushStatus(pushStatusId);
-    expect(result.get('status')).toEqual('succeeded');
-    expect(result.get('numSent')).toEqual(3);
-    expect(result.get('count')).toEqual(undefined);
-  });
+      });
+      await Parse.Object.saveAll(installations);
+      const pushStatusId = await Parse.Push.send({
+        data: { alert: 'We fixed our status!' },
+        where: { deviceType: { $ne: 'random' } },
+      });
+      await pushCompleted(pushStatusId);
+      const result = await Parse.Push.getPushStatus(pushStatusId);
+      expect(result.get('status')).toEqual('succeeded');
+      expect(result.get('numSent')).toEqual(3);
+      expect(result.get('count')).toEqual(undefined);
+    }
+  );
 
   /**
    * Verifies that _PushStatus cannot get stuck in a 'running' state
    * Simulates an extended push, where some installations may be removed,
    * resulting in a non-zero count
    */
-  it("does not get stuck with _PushStatus 'running' on many installations removed", async () => {
-    const devices = 1000;
-    const installations = provideInstallations(devices);
+  it_exclude_dbs(['oracle'])(
+    "does not get stuck with _PushStatus 'running' on many installations removed",
+    async () => {
+      const devices = 1000;
+      const installations = provideInstallations(devices);
 
-    await reconfigureServer({
-      push: { adapter: losingAdapter },
-    });
-    await Parse.Object.saveAll(installations);
-    const pushStatusId = await Parse.Push.send({
-      data: { alert: 'We fixed our status!' },
-      where: { deviceType: 'android' },
-    });
-    await pushCompleted(pushStatusId);
-    const result = await Parse.Push.getPushStatus(pushStatusId);
-    expect(result.get('status')).toEqual('succeeded');
-    // expect # less than # of batches used, assuming each batch is 100 pushes
-    expect(result.get('numSent')).toEqual(devices - devices / 100);
-    expect(result.get('count')).toEqual(undefined);
-  });
+      await reconfigureServer({
+        push: { adapter: losingAdapter },
+      });
+      await Parse.Object.saveAll(installations);
+      const pushStatusId = await Parse.Push.send({
+        data: { alert: 'We fixed our status!' },
+        where: { deviceType: 'android' },
+      });
+      await pushCompleted(pushStatusId);
+      const result = await Parse.Push.getPushStatus(pushStatusId);
+      expect(result.get('status')).toEqual('succeeded');
+      // expect # less than # of batches used, assuming each batch is 100 pushes
+      expect(result.get('numSent')).toEqual(devices - devices / 100);
+      expect(result.get('count')).toEqual(undefined);
+    }
+  );
 
   /**
    * Verifies that _PushStatus cannot get stuck in a 'running' state
    * Simulates an extended push, where some installations may be added,
    * resulting in a non-zero count
    */
-  it("does not get stuck with _PushStatus 'running' on many installations added", async () => {
-    const devices = 1000;
-    const installations = provideInstallations(devices);
+  it_exclude_dbs(['oracle'])(
+    "does not get stuck with _PushStatus 'running' on many installations added",
+    async () => {
+      const devices = 1000;
+      const installations = provideInstallations(devices);
 
-    // add 1 iOS installation which we will omit & add later on
-    const iOSInstallations = [];
-    while (iOSInstallations.length !== devices / 100) {
-      const iOSInstallation = new Parse.Object('_Installation');
-      iOSInstallation.set('installationId', 'installation_' + installations.length);
-      iOSInstallation.set('deviceToken', 'device_token_' + installations.length);
-      iOSInstallation.set('deviceType', 'ios');
-      installations.push(iOSInstallation);
-      iOSInstallations.push(iOSInstallation);
-    }
-    await reconfigureServer({
-      push: {
-        adapter: {
-          send: function (body, installations) {
-            // simulate having added an installation before this was called
-            // thus invalidating our 'count' in _PushStatus
-            installations.push(iOSInstallations.pop());
-            return successfulAny(body, installations);
-          },
-          getValidPushTypes: function () {
-            return ['android'];
+      // add 1 iOS installation which we will omit & add later on
+      const iOSInstallations = [];
+      while (iOSInstallations.length !== devices / 100) {
+        const iOSInstallation = new Parse.Object('_Installation');
+        iOSInstallation.set('installationId', 'installation_' + installations.length);
+        iOSInstallation.set('deviceToken', 'device_token_' + installations.length);
+        iOSInstallation.set('deviceType', 'ios');
+        installations.push(iOSInstallation);
+        iOSInstallations.push(iOSInstallation);
+      }
+      await reconfigureServer({
+        push: {
+          adapter: {
+            send: function (body, installations) {
+              // simulate having added an installation before this was called
+              // thus invalidating our 'count' in _PushStatus
+              installations.push(iOSInstallations.pop());
+              return successfulAny(body, installations);
+            },
+            getValidPushTypes: function () {
+              return ['android'];
+            },
           },
         },
-      },
-    });
-    await Parse.Object.saveAll(installations);
+      });
+      await Parse.Object.saveAll(installations);
 
-    const pushStatusId = await Parse.Push.send({
-      data: { alert: 'We fixed our status!' },
-      where: { deviceType: { $ne: 'random' } },
-    });
-    await pushCompleted(pushStatusId);
-    const result = await Parse.Push.getPushStatus(pushStatusId);
-    expect(result.get('status')).toEqual('succeeded');
-    // expect # less than # of batches used, assuming each batch is 100 pushes
-    expect(result.get('numSent')).toEqual(devices + devices / 100);
-    expect(result.get('count')).toEqual(undefined);
-  });
+      const pushStatusId = await Parse.Push.send({
+        data: { alert: 'We fixed our status!' },
+        where: { deviceType: { $ne: 'random' } },
+      });
+      await pushCompleted(pushStatusId);
+      const result = await Parse.Push.getPushStatus(pushStatusId);
+      expect(result.get('status')).toEqual('succeeded');
+      // expect # less than # of batches used, assuming each batch is 100 pushes
+      expect(result.get('numSent')).toEqual(devices + devices / 100);
+      expect(result.get('count')).toEqual(undefined);
+    }
+  );
 });

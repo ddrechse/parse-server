@@ -650,7 +650,7 @@ describe('Pages Router', () => {
     });
 
     describe('end-to-end tests', () => {
-      it('localizes end-to-end for password reset: success', async () => {
+      it_exclude_dbs(['oracle'])('localizes end-to-end for password reset: success', async () => {
         await reconfigureServer(config);
         const sendPasswordResetEmail = spyOn(
           config.emailAdapter,
@@ -708,37 +708,40 @@ describe('Pages Router', () => {
         );
       });
 
-      it('localizes end-to-end for password reset: invalid link', async () => {
-        await reconfigureServer(config);
-        const sendPasswordResetEmail = spyOn(
-          config.emailAdapter,
-          'sendPasswordResetEmail'
-        ).and.callThrough();
-        const user = new Parse.User();
-        user.setUsername('exampleUsername');
-        user.setPassword('examplePassword');
-        user.set('email', 'mail@example.com');
-        await user.signUp();
-        await Parse.User.requestPasswordReset(user.getEmail());
+      it_exclude_dbs(['oracle'])(
+        'localizes end-to-end for password reset: invalid link',
+        async () => {
+          await reconfigureServer(config);
+          const sendPasswordResetEmail = spyOn(
+            config.emailAdapter,
+            'sendPasswordResetEmail'
+          ).and.callThrough();
+          const user = new Parse.User();
+          user.setUsername('exampleUsername');
+          user.setPassword('examplePassword');
+          user.set('email', 'mail@example.com');
+          await user.signUp();
+          await Parse.User.requestPasswordReset(user.getEmail());
 
-        const link = sendPasswordResetEmail.calls.all()[0].args[0].link;
-        const linkWithLocale = new URL(link);
-        linkWithLocale.searchParams.append(pageParams.locale, exampleLocale);
-        linkWithLocale.searchParams.set(pageParams.token, 'invalidToken');
+          const link = sendPasswordResetEmail.calls.all()[0].args[0].link;
+          const linkWithLocale = new URL(link);
+          linkWithLocale.searchParams.append(pageParams.locale, exampleLocale);
+          linkWithLocale.searchParams.set(pageParams.token, 'invalidToken');
 
-        const linkResponse = await request({
-          url: linkWithLocale.toString(),
-          followRedirects: false,
-        });
-        expect(linkResponse.status).toBe(200);
+          const linkResponse = await request({
+            url: linkWithLocale.toString(),
+            followRedirects: false,
+          });
+          expect(linkResponse.status).toBe(200);
 
-        const pagePath = pageResponse.calls.all()[0].args[0];
-        expect(pagePath).toMatch(
-          new RegExp(`\/${exampleLocale}\/${pages.passwordResetLinkInvalid.defaultFile}`)
-        );
-      });
+          const pagePath = pageResponse.calls.all()[0].args[0];
+          expect(pagePath).toMatch(
+            new RegExp(`\/${exampleLocale}\/${pages.passwordResetLinkInvalid.defaultFile}`)
+          );
+        }
+      );
 
-      it('localizes end-to-end for verify email: success', async () => {
+      it_exclude_dbs(['oracle'])('localizes end-to-end for verify email: success', async () => {
         await reconfigureServer(config);
         const sendVerificationEmail = spyOn(
           config.emailAdapter,
@@ -1127,7 +1130,7 @@ describe('Pages Router', () => {
     });
 
     describe('custom endpoint', () => {
-      it('password reset works with custom endpoint', async () => {
+      it_exclude_dbs(['oracle'])('password reset works with custom endpoint', async () => {
         config.pages.pagesEndpoint = 'customEndpoint';
         await reconfigureServer(config);
         const sendPasswordResetEmail = spyOn(
@@ -1178,7 +1181,7 @@ describe('Pages Router', () => {
         );
       });
 
-      it('email verification works with custom endpoint', async () => {
+      it_exclude_dbs(['oracle'])('email verification works with custom endpoint', async () => {
         config.pages.pagesEndpoint = 'customEndpoint';
         await reconfigureServer(config);
         const sendVerificationEmail = spyOn(

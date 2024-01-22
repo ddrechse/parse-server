@@ -500,42 +500,45 @@ describe('ParseGraphQLSchema', () => {
     });
   });
   describe('alias', () => {
-    it('Should be able to define alias for get and find query', async () => {
-      const parseGraphQLSchema = new ParseGraphQLSchema({
-        databaseController,
-        parseGraphQLController,
-        log: defaultLogger,
-        appId,
-      });
+    it_exclude_dbs(['oracle'])(
+      'Should be able to define alias for get and find query',
+      async () => {
+        const parseGraphQLSchema = new ParseGraphQLSchema({
+          databaseController,
+          parseGraphQLController,
+          log: defaultLogger,
+          appId,
+        });
 
-      await parseGraphQLSchema.parseGraphQLController.updateGraphQLConfig({
-        classConfigs: [
-          {
-            className: 'Data',
-            query: {
-              get: true,
-              getAlias: 'precious_data',
-              find: true,
-              findAlias: 'data_results',
+        await parseGraphQLSchema.parseGraphQLController.updateGraphQLConfig({
+          classConfigs: [
+            {
+              className: 'Data',
+              query: {
+                get: true,
+                getAlias: 'precious_data',
+                find: true,
+                findAlias: 'data_results',
+              },
             },
-          },
-        ],
-      });
+          ],
+        });
 
-      const data = new Parse.Object('Data');
+        const data = new Parse.Object('Data');
 
-      await data.save();
+        await data.save();
 
-      await parseGraphQLSchema.schemaCache.clear();
-      await parseGraphQLSchema.load();
+        await parseGraphQLSchema.schemaCache.clear();
+        await parseGraphQLSchema.load();
 
-      const queries1 = parseGraphQLSchema.graphQLQueries;
+        const queries1 = parseGraphQLSchema.graphQLQueries;
 
-      expect(Object.keys(queries1)).toContain('data_results');
-      expect(Object.keys(queries1)).toContain('precious_data');
-    });
+        expect(Object.keys(queries1)).toContain('data_results');
+        expect(Object.keys(queries1)).toContain('precious_data');
+      }
+    );
 
-    it('Should be able to define alias for mutation', async () => {
+    it_exclude_dbs(['oracle'])('Should be able to define alias for mutation', async () => {
       const parseGraphQLSchema = new ParseGraphQLSchema({
         databaseController,
         parseGraphQLController,

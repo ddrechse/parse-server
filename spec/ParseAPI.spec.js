@@ -163,90 +163,96 @@ describe('miscellaneous', function () {
     expect(numCreated).toBe(1);
   });
 
-  it('ensure that if people already have duplicate users, they can still sign up new users', async done => {
-    try {
-      await Parse.User.logOut();
-    } catch (e) {
-      /* ignore */
+  it_exclude_dbs(['oracle'])(
+    'ensure that if people already have duplicate users, they can still sign up new users',
+    async done => {
+      try {
+        await Parse.User.logOut();
+      } catch (e) {
+        /* ignore */
+      }
+      const config = Config.get('test');
+      // Remove existing data to clear out unique index
+      TestUtils.destroyAllDataPermanently()
+        .then(() => config.database.adapter.performInitialization({ VolatileClassesSchemas: [] }))
+        .then(() => config.database.adapter.createClass('_User', userSchema))
+        .then(() =>
+          config.database.adapter
+            .createObject('_User', userSchema, { objectId: 'x', username: 'u' })
+            .catch(fail)
+        )
+        .then(() =>
+          config.database.adapter
+            .createObject('_User', userSchema, { objectId: 'y', username: 'u' })
+            .catch(fail)
+        )
+        // Create a new server to try to recreate the unique indexes
+        .then(reconfigureServer)
+        .catch(error => {
+          expect(error.code).toEqual(Parse.Error.DUPLICATE_VALUE);
+          const user = new Parse.User();
+          user.setPassword('asdf');
+          user.setUsername('zxcv');
+          return user.signUp().catch(fail);
+        })
+        .then(() => {
+          const user = new Parse.User();
+          user.setPassword('asdf');
+          user.setUsername('u');
+          return user.signUp();
+        })
+        .then(() => {
+          fail('should not have been able to sign up');
+          done();
+        })
+        .catch(error => {
+          expect(error.code).toEqual(Parse.Error.USERNAME_TAKEN);
+          done();
+        });
     }
-    const config = Config.get('test');
-    // Remove existing data to clear out unique index
-    TestUtils.destroyAllDataPermanently()
-      .then(() => config.database.adapter.performInitialization({ VolatileClassesSchemas: [] }))
-      .then(() => config.database.adapter.createClass('_User', userSchema))
-      .then(() =>
-        config.database.adapter
-          .createObject('_User', userSchema, { objectId: 'x', username: 'u' })
-          .catch(fail)
-      )
-      .then(() =>
-        config.database.adapter
-          .createObject('_User', userSchema, { objectId: 'y', username: 'u' })
-          .catch(fail)
-      )
-      // Create a new server to try to recreate the unique indexes
-      .then(reconfigureServer)
-      .catch(error => {
-        expect(error.code).toEqual(Parse.Error.DUPLICATE_VALUE);
-        const user = new Parse.User();
-        user.setPassword('asdf');
-        user.setUsername('zxcv');
-        return user.signUp().catch(fail);
-      })
-      .then(() => {
-        const user = new Parse.User();
-        user.setPassword('asdf');
-        user.setUsername('u');
-        return user.signUp();
-      })
-      .then(() => {
-        fail('should not have been able to sign up');
-        done();
-      })
-      .catch(error => {
-        expect(error.code).toEqual(Parse.Error.USERNAME_TAKEN);
-        done();
-      });
-  });
+  );
 
-  it('ensure that if people already have duplicate emails, they can still sign up new users', done => {
-    const config = Config.get('test');
-    // Remove existing data to clear out unique index
-    TestUtils.destroyAllDataPermanently()
-      .then(() => config.database.adapter.performInitialization({ VolatileClassesSchemas: [] }))
-      .then(() => config.database.adapter.createClass('_User', userSchema))
-      .then(() =>
-        config.database.adapter.createObject('_User', userSchema, {
-          objectId: 'x',
-          email: 'a@b.c',
+  it_exclude_dbs(['oracle'])(
+    'ensure that if people already have duplicate emails, they can still sign up new users',
+    done => {
+      const config = Config.get('test');
+      // Remove existing data to clear out unique index
+      TestUtils.destroyAllDataPermanently()
+        .then(() => config.database.adapter.performInitialization({ VolatileClassesSchemas: [] }))
+        .then(() => config.database.adapter.createClass('_User', userSchema))
+        .then(() =>
+          config.database.adapter.createObject('_User', userSchema, {
+            objectId: 'x',
+            email: 'a@b.c',
+          })
+        )
+        .then(() =>
+          config.database.adapter.createObject('_User', userSchema, {
+            objectId: 'y',
+            email: 'a@b.c',
+          })
+        )
+        .then(reconfigureServer)
+        .catch(() => {
+          const user = new Parse.User();
+          user.setPassword('asdf');
+          user.setUsername('qqq');
+          user.setEmail('unique@unique.unique');
+          return user.signUp().catch(fail);
         })
-      )
-      .then(() =>
-        config.database.adapter.createObject('_User', userSchema, {
-          objectId: 'y',
-          email: 'a@b.c',
+        .then(() => {
+          const user = new Parse.User();
+          user.setPassword('asdf');
+          user.setUsername('www');
+          user.setEmail('a@b.c');
+          return user.signUp();
         })
-      )
-      .then(reconfigureServer)
-      .catch(() => {
-        const user = new Parse.User();
-        user.setPassword('asdf');
-        user.setUsername('qqq');
-        user.setEmail('unique@unique.unique');
-        return user.signUp().catch(fail);
-      })
-      .then(() => {
-        const user = new Parse.User();
-        user.setPassword('asdf');
-        user.setUsername('www');
-        user.setEmail('a@b.c');
-        return user.signUp();
-      })
-      .catch(error => {
-        expect(error.code).toEqual(Parse.Error.EMAIL_TAKEN);
-        done();
-      });
-  });
+        .catch(error => {
+          expect(error.code).toEqual(Parse.Error.EMAIL_TAKEN);
+          done();
+        });
+    }
+  );
 
   it('ensure that if you try to sign up a user with a unique username and email, but duplicates in some other field that has a uniqueness constraint, you get a regular duplicate value error', async done => {
     await reconfigureServer();
@@ -289,7 +295,7 @@ describe('miscellaneous', function () {
     }, fail);
   });
 
-  it('increment with a user object', function (done) {
+  it_exclude_dbs(['oracle'])('increment with a user object', function (done) {
     createTestUser()
       .then(user => {
         user.increment('foo');
@@ -317,7 +323,7 @@ describe('miscellaneous', function () {
       );
   });
 
-  it('save various data types', function (done) {
+  it_exclude_dbs(['oracle'])('save various data types', function (done) {
     const obj = new TestObject();
     obj.set('date', new Date());
     obj.set('array', [1, 2, 3]);
@@ -951,7 +957,7 @@ describe('miscellaneous', function () {
       );
   });
 
-  it('return the updated fields on PUT', async () => {
+  it_exclude_dbs(['oracle'])('return the updated fields on PUT', async () => {
     const obj = new Parse.Object('GameScore');
     const pointer = new Parse.Object('Child');
     await pointer.save();
@@ -1023,7 +1029,7 @@ describe('miscellaneous', function () {
     expect(body.updatedAt).not.toBeUndefined();
   });
 
-  it('should response should not change with triggers', async () => {
+  it_exclude_dbs(['oracle'])('should response should not change with triggers', async () => {
     const obj = new Parse.Object('GameScore');
     const pointer = new Parse.Object('Child');
     Parse.Cloud.beforeSave('GameScore', request => {
@@ -1471,7 +1477,7 @@ describe('miscellaneous', function () {
       });
   });
 
-  it('properly returns incremented values (#1554)', done => {
+  it_exclude_dbs(['oracle'])('properly returns incremented values (#1554)', done => {
     const headers = {
       'Content-Type': 'application/json',
       'X-Parse-Application-Id': 'test',
@@ -1660,7 +1666,7 @@ describe('miscellaneous', function () {
       });
   });
 
-  it('purge all objects in class', done => {
+  it_exclude_dbs(['oracle'])('purge all objects in class', done => {
     const object = new Parse.Object('TestObject');
     object.set('foo', 'bar');
     const object2 = new Parse.Object('TestObject');

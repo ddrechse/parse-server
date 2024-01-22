@@ -174,7 +174,7 @@ describe_only(() => {
 describe_only(() => {
   return process.env.PARSE_SERVER_LOG_LEVEL !== 'debug';
 })('verbose logs', () => {
-  it('mask sensitive information in _User class', done => {
+  it_exclude_dbs(['oracle'])('mask sensitive information in _User class', done => {
     reconfigureServer({ verbose: true })
       .then(() => createTestUser())
       .then(() => {

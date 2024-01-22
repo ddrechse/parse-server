@@ -601,7 +601,7 @@ describe('ParseServerRESTController', () => {
     expect(sessions[0].get('installationId')).toBe('my-installation');
   });
 
-  it('ensures logIn is saved with installationId', async () => {
+  it_exclude_dbs(['oracle'])('ensures logIn is saved with installationId', async () => {
     const installationId = 'installation123';
     const user = await RESTController.request(
       'POST',

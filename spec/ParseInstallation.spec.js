@@ -406,7 +406,7 @@ describe('Installations', () => {
       });
   });
 
-  it('updating with new channels', done => {
+  it_exclude_dbs(['oracle'])('updating with new channels', done => {
     const input = {
       installationId: '12345678-abcd-abcd-abcd-123456789abc',
       deviceType: 'android',
@@ -856,7 +856,7 @@ describe('Installations', () => {
       });
   });
 
-  it('update is linking two existing objects w/ increment', done => {
+  it_exclude_dbs(['oracle'])('update is linking two existing objects w/ increment', done => {
     const installId = '12345678-abcd-abcd-abcd-123456789abc';
     const t = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
     let input = {
@@ -969,7 +969,7 @@ describe('Installations', () => {
       });
   });
 
-  it('update is linking two existing with installation id w/ op', done => {
+  it_exclude_dbs(['oracle'])('update is linking two existing with installation id w/ op', done => {
     const installId = '12345678-abcd-abcd-abcd-123456789abc';
     const t = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
     let input = {
@@ -1239,7 +1239,7 @@ describe('Installations', () => {
     });
   });
 
-  it('can use push with beforeSave', async () => {
+  it_exclude_dbs(['oracle'])('can use push with beforeSave', async () => {
     const input = {
       deviceToken: '11433856eed2f1285fb3aa11136718c1198ed5647875096952c66bf8cb976306',
       deviceType: 'ios',

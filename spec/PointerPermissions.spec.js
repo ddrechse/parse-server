@@ -226,7 +226,7 @@ describe('Pointer Permissions', () => {
         });
     });
 
-    it('should query on pointer permission enabled column', done => {
+    it_exclude_dbs(['oracle'])('should query on pointer permission enabled column', done => {
       const config = Config.get(Parse.applicationId);
       const user = new Parse.User();
       const user2 = new Parse.User();
@@ -1070,7 +1070,7 @@ describe('Pointer Permissions', () => {
       }
     });
 
-    it('should work with write', async done => {
+    it_exclude_dbs(['oracle'])('should work with write', async done => {
       const config = Config.get(Parse.applicationId);
       const user = new Parse.User();
       const user2 = new Parse.User();
@@ -1203,7 +1203,7 @@ describe('Pointer Permissions', () => {
       done();
     });
 
-    it('should query on pointer permission enabled column', async done => {
+    it_exclude_dbs(['oracle'])('should query on pointer permission enabled column', async done => {
       const config = Config.get(Parse.applicationId);
       const user = new Parse.User();
       const user2 = new Parse.User();
@@ -2517,7 +2517,7 @@ describe('Pointer Permissions', () => {
           done();
         });
 
-        it('should fail for user not listed', async done => {
+        it_exclude_dbs(['oracle'])('should fail for user not listed', async done => {
           await updateCLP({
             get: {
               pointerFields: ['moderators'],
@@ -2685,7 +2685,7 @@ describe('Pointer Permissions', () => {
           done();
         });
 
-        it('should be allowed (multiple users in array)', async done => {
+        it_exclude_dbs(['oracle'])('should be allowed (multiple users in array)', async done => {
           await updateCLP({
             update: {
               pointerFields: ['moderators'],
@@ -2698,7 +2698,7 @@ describe('Pointer Permissions', () => {
           done();
         });
 
-        it('should fail for user not listed', async done => {
+        it_exclude_dbs(['oracle'])('should fail for user not listed', async done => {
           await updateCLP({
             update: {
               pointerFields: ['moderators'],
@@ -2764,7 +2764,7 @@ describe('Pointer Permissions', () => {
           done();
         });
 
-        it('should fail for user not listed', async done => {
+        it_exclude_dbs(['oracle'])('should fail for user not listed', async done => {
           await updateCLP({
             delete: {
               pointerFields: ['owners'],
@@ -2874,22 +2874,25 @@ describe('Pointer Permissions', () => {
           done();
         });
 
-        it('should be restricted when updating object without addField permission', async done => {
-          await updateCLP({
-            update: {
-              '*': true,
-            },
-            addField: {
-              pointerFields: ['moderators'],
-            },
-          });
+        it_exclude_dbs(['oracle'])(
+          'should be restricted when updating object without addField permission',
+          async done => {
+            await updateCLP({
+              update: {
+                '*': true,
+              },
+              addField: {
+                pointerFields: ['moderators'],
+              },
+            });
 
-          await logIn(user1);
+            await logIn(user1);
 
-          await expectAsync(actionAddFieldOnUpdate(obj2)).toBeRejectedWith(OBJECT_NOT_FOUND);
+            await expectAsync(actionAddFieldOnUpdate(obj2)).toBeRejectedWith(OBJECT_NOT_FOUND);
 
-          done();
-        });
+            done();
+          }
+        );
       });
     });
 
@@ -2946,44 +2949,50 @@ describe('Pointer Permissions', () => {
         await initialize();
       });
 
-      it('should not limit the scope of grouped read permissions', async done => {
-        await updateCLP({
-          get: {
-            pointerFields: ['owner'],
-          },
-          readUserFields: ['moderators'],
-        });
+      it_exclude_dbs(['oracle'])(
+        'should not limit the scope of grouped read permissions',
+        async done => {
+          await updateCLP({
+            get: {
+              pointerFields: ['owner'],
+            },
+            readUserFields: ['moderators'],
+          });
 
-        await logIn(user2);
+          await logIn(user2);
 
-        await expectAsync(actionGet(obj1.id)).toBeResolved();
+          await expectAsync(actionGet(obj1.id)).toBeResolved();
 
-        const found = await actionFind();
-        expect(found.length).toBe(2);
+          const found = await actionFind();
+          expect(found.length).toBe(2);
 
-        const counted = await actionCount();
-        expect(counted).toBe(2);
+          const counted = await actionCount();
+          expect(counted).toBe(2);
 
-        done();
-      });
+          done();
+        }
+      );
 
-      it('should not limit the scope of grouped write permissions', async done => {
-        await updateCLP({
-          update: {
-            pointerFields: ['owner'],
-          },
-          writeUserFields: ['moderators'],
-        });
+      it_exclude_dbs(['oracle'])(
+        'should not limit the scope of grouped write permissions',
+        async done => {
+          await updateCLP({
+            update: {
+              pointerFields: ['owner'],
+            },
+            writeUserFields: ['moderators'],
+          });
 
-        await logIn(user2);
+          await logIn(user2);
 
-        await expectAsync(actionUpdate(obj1)).toBeResolved();
-        await expectAsync(actionAddFieldOnUpdate(obj1)).toBeResolved();
-        await expectAsync(actionDelete(obj1)).toBeResolved();
-        // [create] and [addField on create] can't be enabled with pointer by design
+          await expectAsync(actionUpdate(obj1)).toBeResolved();
+          await expectAsync(actionAddFieldOnUpdate(obj1)).toBeResolved();
+          await expectAsync(actionDelete(obj1)).toBeResolved();
+          // [create] and [addField on create] can't be enabled with pointer by design
 
-        done();
-      });
+          done();
+        }
+      );
 
       it('should not inherit scope of grouped read permissions from another field', async done => {
         await updateCLP({

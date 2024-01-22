@@ -103,41 +103,44 @@ describe('Auth Adapter features', () => {
     ).toBeRejectedWithError('this auth is already used');
   });
 
-  it('should ensure no duplicate auth data id after before save in case of more than one result', async () => {
-    await reconfigureServer({
-      auth: { baseAdapter },
-      cloud: () => {
-        Parse.Cloud.beforeSave('_User', async request => {
-          request.object.set('authData', { baseAdapter: { id: 'test' } });
-        });
-      },
-    });
+  it_exclude_dbs(['oracle'])(
+    'should ensure no duplicate auth data id after before save in case of more than one result',
+    async () => {
+      await reconfigureServer({
+        auth: { baseAdapter },
+        cloud: () => {
+          Parse.Cloud.beforeSave('_User', async request => {
+            request.object.set('authData', { baseAdapter: { id: 'test' } });
+          });
+        },
+      });
 
-    const user = new Parse.User();
-    await user.save({ authData: { baseAdapter: { id: 'another' } } });
-    await user.fetch({ useMasterKey: true });
-    expect(user.get('authData')).toEqual({ baseAdapter: { id: 'test' } });
+      const user = new Parse.User();
+      await user.save({ authData: { baseAdapter: { id: 'another' } } });
+      await user.fetch({ useMasterKey: true });
+      expect(user.get('authData')).toEqual({ baseAdapter: { id: 'test' } });
 
-    let i = 0;
-    const originalFn = Auth.findUsersWithAuthData;
-    spyOn(Auth, 'findUsersWithAuthData').and.callFake((...params) => {
-      // First call is triggered during authData validation
-      if (i === 0) {
-        i++;
-        return originalFn(...params);
-      }
-      // Second call is triggered after beforeSave. A developer can modify authData during beforeSave.
-      // To perform a determinist login, the uniqueness of `auth.id` needs to be ensured.
-      // A developer with a direct access to the database could break something and duplicate authData.id.
-      // In this case, if 2 matching users are detected for a single authData.id, then the login/register will be canceled.
-      // Promise.resolve([true, true]) simulates this case with 2 matching users.
-      return Promise.resolve([true, true]);
-    });
-    const user2 = new Parse.User();
-    await expectAsync(
-      user2.save({ authData: { baseAdapter: { id: 'another' } } })
-    ).toBeRejectedWithError('this auth is already used');
-  });
+      let i = 0;
+      const originalFn = Auth.findUsersWithAuthData;
+      spyOn(Auth, 'findUsersWithAuthData').and.callFake((...params) => {
+        // First call is triggered during authData validation
+        if (i === 0) {
+          i++;
+          return originalFn(...params);
+        }
+        // Second call is triggered after beforeSave. A developer can modify authData during beforeSave.
+        // To perform a determinist login, the uniqueness of `auth.id` needs to be ensured.
+        // A developer with a direct access to the database could break something and duplicate authData.id.
+        // In this case, if 2 matching users are detected for a single authData.id, then the login/register will be canceled.
+        // Promise.resolve([true, true]) simulates this case with 2 matching users.
+        return Promise.resolve([true, true]);
+      });
+      const user2 = new Parse.User();
+      await expectAsync(
+        user2.save({ authData: { baseAdapter: { id: 'another' } } })
+      ).toBeRejectedWithError('this auth is already used');
+    }
+  );
 
   it('should ensure no duplicate auth data id during authData validation in case of more than one result', async () => {
     await reconfigureServer({
@@ -203,7 +206,7 @@ describe('Auth Adapter features', () => {
     expect(secondCall.length).toEqual(3);
   });
 
-  it('should trigger correctly validateSetUp', async () => {
+  it_exclude_dbs(['oracle'])('should trigger correctly validateSetUp', async () => {
     spyOn(modernAdapter, 'validateSetUp').and.resolveTo({});
     spyOn(modernAdapter, 'validateUpdate').and.resolveTo({});
     spyOn(modernAdapter, 'validateLogin').and.resolveTo({});

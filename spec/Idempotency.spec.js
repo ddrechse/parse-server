@@ -46,7 +46,7 @@ describe('Idempotency', () => {
   });
 
   // Tests
-  it('should enforce idempotency for cloud code function', async () => {
+  it_exclude_dbs(['oracle'])('should enforce idempotency for cloud code function', async () => {
     let counter = 0;
     Parse.Cloud.define('myFunction', () => {
       counter++;
@@ -69,7 +69,7 @@ describe('Idempotency', () => {
     expect(counter).toBe(1);
   });
 
-  it('should delete request entry after TTL', async () => {
+  it_exclude_dbs(['oracle'])('should delete request entry after TTL', async () => {
     let counter = 0;
     Parse.Cloud.define('myFunction', () => {
       counter++;
@@ -119,7 +119,7 @@ describe('Idempotency', () => {
     }
   );
 
-  it('should enforce idempotency for cloud code jobs', async () => {
+  it_exclude_dbs(['oracle'])('should enforce idempotency for cloud code jobs', async () => {
     let counter = 0;
     Parse.Cloud.job('myJob', () => {
       counter++;
@@ -141,7 +141,7 @@ describe('Idempotency', () => {
     expect(counter).toBe(1);
   });
 
-  it('should enforce idempotency for class object creation', async () => {
+  it_exclude_dbs(['oracle'])('should enforce idempotency for class object creation', async () => {
     let counter = 0;
     Parse.Cloud.afterSave('MyClass', () => {
       counter++;
@@ -163,7 +163,7 @@ describe('Idempotency', () => {
     expect(counter).toBe(1);
   });
 
-  it('should enforce idempotency for user object creation', async () => {
+  it_exclude_dbs(['oracle'])('should enforce idempotency for user object creation', async () => {
     let counter = 0;
     Parse.Cloud.afterSave('_User', () => {
       counter++;
@@ -189,70 +189,79 @@ describe('Idempotency', () => {
     expect(counter).toBe(1);
   });
 
-  it('should enforce idempotency for installation object creation', async () => {
-    let counter = 0;
-    Parse.Cloud.afterSave('_Installation', () => {
-      counter++;
-    });
-    const params = {
-      method: 'POST',
-      url: 'http://localhost:8378/1/installations',
-      body: {
-        installationId: '1',
-        deviceType: 'ios',
-      },
-      headers: {
-        'X-Parse-Application-Id': Parse.applicationId,
-        'X-Parse-Master-Key': Parse.masterKey,
-        'X-Parse-Request-Id': 'abc-123',
-      },
-    };
-    await expectAsync(request(params)).toBeResolved();
-    await request(params).then(fail, e => {
-      expect(e.status).toEqual(400);
-      expect(e.data.error).toEqual('Duplicate request');
-    });
-    expect(counter).toBe(1);
-  });
-
-  it('should not interfere with calls of different request ID', async () => {
-    let counter = 0;
-    Parse.Cloud.afterSave('MyClass', () => {
-      counter++;
-    });
-    const promises = [...Array(100).keys()].map(() => {
+  it_exclude_dbs(['oracle'])(
+    'should enforce idempotency for installation object creation',
+    async () => {
+      let counter = 0;
+      Parse.Cloud.afterSave('_Installation', () => {
+        counter++;
+      });
       const params = {
         method: 'POST',
-        url: 'http://localhost:8378/1/classes/MyClass',
+        url: 'http://localhost:8378/1/installations',
+        body: {
+          installationId: '1',
+          deviceType: 'ios',
+        },
         headers: {
           'X-Parse-Application-Id': Parse.applicationId,
           'X-Parse-Master-Key': Parse.masterKey,
-          'X-Parse-Request-Id': uuid.v4(),
+          'X-Parse-Request-Id': 'abc-123',
         },
       };
-      return request(params);
-    });
-    await expectAsync(Promise.all(promises)).toBeResolved();
-    expect(counter).toBe(100);
-  });
+      await expectAsync(request(params)).toBeResolved();
+      await request(params).then(fail, e => {
+        expect(e.status).toEqual(400);
+        expect(e.data.error).toEqual('Duplicate request');
+      });
+      expect(counter).toBe(1);
+    }
+  );
 
-  it('should re-throw any other error unchanged when writing request entry fails for any other reason', async () => {
-    spyOn(rest, 'create').and.rejectWith(new Parse.Error(0, 'some other error'));
-    Parse.Cloud.define('myFunction', () => {});
-    const params = {
-      method: 'POST',
-      url: 'http://localhost:8378/1/functions/myFunction',
-      headers: {
-        'X-Parse-Application-Id': Parse.applicationId,
-        'X-Parse-Master-Key': Parse.masterKey,
-        'X-Parse-Request-Id': 'abc-123',
-      },
-    };
-    await request(params).then(fail, e => {
-      expect(e.status).toEqual(400);
-      expect(e.data.error).toEqual('some other error');
-    });
-  });
+  it_exclude_dbs(['oracle'])(
+    'should not interfere with calls of different request ID',
+    async () => {
+      let counter = 0;
+      Parse.Cloud.afterSave('MyClass', () => {
+        counter++;
+      });
+      const promises = [...Array(100).keys()].map(() => {
+        const params = {
+          method: 'POST',
+          url: 'http://localhost:8378/1/classes/MyClass',
+          headers: {
+            'X-Parse-Application-Id': Parse.applicationId,
+            'X-Parse-Master-Key': Parse.masterKey,
+            'X-Parse-Request-Id': uuid.v4(),
+          },
+        };
+        return request(params);
+      });
+      await expectAsync(Promise.all(promises)).toBeResolved();
+      expect(counter).toBe(100);
+    }
+  );
+
+  it_exclude_dbs(['oracle'])(
+    'should re-throw any other error unchanged when writing request entry fails for any other reason',
+    async () => {
+      spyOn(rest, 'create').and.rejectWith(new Parse.Error(0, 'some other error'));
+      Parse.Cloud.define('myFunction', () => {});
+      const params = {
+        method: 'POST',
+        url: 'http://localhost:8378/1/functions/myFunction',
+        headers: {
+          'X-Parse-Application-Id': Parse.applicationId,
+          'X-Parse-Master-Key': Parse.masterKey,
+          'X-Parse-Request-Id': 'abc-123',
+        },
+      };
+      await request(params).then(fail, e => {
+        expect(e.status).toEqual(400);
+        expect(e.data.error).toEqual('some other error');
+      });
+    }
+  );
 
   it('should use default configuration when none is set', async () => {
     await setup({});

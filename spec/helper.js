@@ -35,6 +35,7 @@ process.noDeprecation = true;
 const cache = require('../lib/cache').default;
 const defaults = require('../lib/defaults').default;
 const ParseServer = require('../lib/index').ParseServer;
+const loadAdapter = require('../lib/Adapters/AdapterLoader').loadAdapter;
 const path = require('path');
 const TestUtils = require('../lib/TestUtils');
 const GridFSBucketAdapter = require('../lib/Adapters/Files/GridFSBucketAdapter')
@@ -49,11 +50,14 @@ const { VolatileClassesSchemas } = require('../lib/Controllers/SchemaController'
 
 const mongoURI = 'mongodb://localhost:27017/parseServerMongoAdapterTestDatabase';
 const postgresURI = 'postgres://localhost:5432/parse_server_postgres_adapter_test_database';
+
 let databaseAdapter;
 let databaseURI;
 // need to bind for mocking mocha
-
-if (process.env.PARSE_SERVER_TEST_DB === 'postgres') {
+if (process.env.PARSE_SERVER_DATABASE_ADAPTER) {
+  databaseAdapter = JSON.parse(process.env.PARSE_SERVER_DATABASE_ADAPTER);
+  databaseAdapter = loadAdapter(databaseAdapter);
+} else if (process.env.PARSE_SERVER_TEST_DB === 'postgres') {
   databaseURI = process.env.PARSE_SERVER_TEST_DATABASE_URI || postgresURI;
   databaseAdapter = new PostgresStorageAdapter({
     uri: databaseURI,
@@ -103,7 +107,6 @@ const defaultConfiguration = {
   restAPIKey: 'rest',
   webhookKey: 'hook',
   masterKey: 'test',
-  maintenanceKey: 'testing',
   readOnlyMasterKey: 'read-only-test',
   fileKey: 'test',
   directAccess: true,
@@ -433,21 +436,18 @@ try {
   // Fetch test exclusion list
   testExclusionList = require('./testExclusionList.json');
   console.log(`Using test exclusion list with ${testExclusionList.length} entries`);
-} catch(error) {
-  if(error.code !== 'MODULE_NOT_FOUND') {
+} catch (error) {
+  if (error.code !== 'MODULE_NOT_FOUND') {
     throw error;
   }
 }
 
-// Disable test if its UUID is found in testExclusionList
-global.it_id = (id, func) => {
+// Overload test method
+global.it_id = id => {
   if (testExclusionList.includes(id)) {
     return xit;
   } else {
-    if(func === undefined)
-      return it;
-    else
-      return func;
+    return it;
   }
 };
 
@@ -464,6 +464,15 @@ global.it_only_db = db => {
 
 global.it_only_mongodb_version = version => {
   const envVersion = process.env.MONGODB_VERSION;
+  if (!envVersion || semver.satisfies(envVersion, version)) {
+    return it;
+  } else {
+    return xit;
+  }
+};
+
+global.it_only_oracle_version = version => {
+  const envVersion = process.env.ORACLEDB_VERSION;
   if (!envVersion || semver.satisfies(envVersion, version)) {
     return it;
   } else {
@@ -596,3 +605,17 @@ jasmine.restoreLibrary = function (library, name) {
 };
 
 jasmine.timeout = t => new Promise(resolve => setTimeout(resolve, t));
+
+// check if we are running in jenkins, and if so, add the junit reporter
+if (process.env.BUILD_ID) {
+  console.log('ADD JUNIT REPORTER');
+  const reporters = require('jasmine-reporters');
+
+  const junitReporter = new reporters.JUnitXmlReporter({
+    savePath: '.',
+    filePrefix: 'TEST',
+    consolidateAll: true,
+  });
+
+  jasmine.getEnv().addReporter(junitReporter);
+}

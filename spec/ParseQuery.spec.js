@@ -590,7 +590,7 @@ describe('Parse.Query testing', () => {
     });
   });
 
-  it('containsAll object array queries', function (done) {
+  it_exclude_dbs(['oracle'])('containsAll object array queries', function (done) {
     const MessageSet = Parse.Object.extend({ className: 'MessageSet' });
 
     const messageList = [];
@@ -705,40 +705,43 @@ describe('Parse.Query testing', () => {
     });
   });
 
-  it('containsAllStartingWith values must be all of type starting with regex', done => {
-    const object = new Parse.Object('Object');
-    object.set('strings', ['the', 'brown', 'lazy', 'fox', 'jumps']);
+  it_exclude_dbs(['oracle'])(
+    'containsAllStartingWith values must be all of type starting with regex',
+    done => {
+      const object = new Parse.Object('Object');
+      object.set('strings', ['the', 'brown', 'lazy', 'fox', 'jumps']);
 
-    object
-      .save()
-      .then(() => {
-        equal(object.isNew(), false);
+      object
+        .save()
+        .then(() => {
+          equal(object.isNew(), false);
 
-        return request({
-          url: Parse.serverURL + '/classes/Object',
-          qs: {
-            where: JSON.stringify({
-              strings: {
-                $all: [
-                  { $regex: '^\\Qthe\\E' },
-                  { $regex: '^\\Qlazy\\E' },
-                  { $regex: '^\\Qfox\\E' },
-                  { $unknown: /unknown/ },
-                ],
-              },
-            }),
-          },
-          headers: {
-            'X-Parse-Application-Id': Parse.applicationId,
-            'X-Parse-Javascript-Key': Parse.javaScriptKey,
-            'Content-Type': 'application/json',
-          },
+          return request({
+            url: Parse.serverURL + '/classes/Object',
+            qs: {
+              where: JSON.stringify({
+                strings: {
+                  $all: [
+                    { $regex: '^\\Qthe\\E' },
+                    { $regex: '^\\Qlazy\\E' },
+                    { $regex: '^\\Qfox\\E' },
+                    { $unknown: /unknown/ },
+                  ],
+                },
+              }),
+            },
+            headers: {
+              'X-Parse-Application-Id': Parse.applicationId,
+              'X-Parse-Javascript-Key': Parse.javaScriptKey,
+              'Content-Type': 'application/json',
+            },
+          });
+        })
+        .then(done.fail, function () {
+          done();
         });
-      })
-      .then(done.fail, function () {
-        done();
-      });
-  });
+    }
+  );
 
   it('containsAllStartingWith empty array values should return empty results', done => {
     const object = new Parse.Object('Object');
@@ -884,7 +887,7 @@ describe('Parse.Query testing', () => {
       );
   });
 
-  it('containedBy pointer array', done => {
+  it_exclude_dbs(['oracle'])('containedBy pointer array', done => {
     const objects = Array.from(Array(10).keys()).map(idx => {
       const obj = new Parse.Object('Object');
       obj.set('key', idx);
@@ -1668,7 +1671,7 @@ describe('Parse.Query testing', () => {
       .catch(done.fail);
   });
 
-  it('can order on an object number field', function (done) {
+  it_exclude_dbs(['oracle'])('can order on an object number field', function (done) {
     const testSet = [
       { sortField: { value: 10 } },
       { sortField: { value: 1 } },
@@ -1689,7 +1692,7 @@ describe('Parse.Query testing', () => {
       .catch(done.fail);
   });
 
-  it('can order on an object number field (level 2)', function (done) {
+  it_exclude_dbs(['oracle'])('can order on an object number field (level 2)', function (done) {
     const testSet = [
       { sortField: { value: { field: 10 } } },
       { sortField: { value: { field: 1 } } },
@@ -2111,7 +2114,7 @@ describe('Parse.Query testing', () => {
       .then(done);
   });
 
-  it('Use a regex that requires all modifiers', function (done) {
+  it_exclude_dbs(['oracle'])('Use a regex that requires all modifiers', function (done) {
     const thing = new TestObject();
     thing.set('myString', 'PArSe\nCom');
     Parse.Object.saveAll([thing]).then(function () {
@@ -3786,7 +3789,7 @@ describe('Parse.Query testing', () => {
     });
   });
 
-  it('notEqual with array of pointers', done => {
+  it_exclude_dbs(['oracle'])('notEqual with array of pointers', done => {
     const children = [];
     const parents = [];
     const promises = [];
@@ -4003,7 +4006,7 @@ describe('Parse.Query testing', () => {
     );
   });
 
-  it('should properly interpret a query v2', done => {
+  it_exclude_dbs(['oracle'])('should properly interpret a query v2', done => {
     const user = new Parse.User();
     user.set('username', 'foo');
     user.set('password', 'bar');
@@ -4082,7 +4085,7 @@ describe('Parse.Query testing', () => {
       });
   });
 
-  it('should find objects with array of pointers', done => {
+  it_exclude_dbs(['oracle'])('should find objects with array of pointers', done => {
     const objects = [];
     while (objects.length != 5) {
       const object = new Parse.Object('ContainedObject');
@@ -5013,7 +5016,7 @@ describe('Parse.Query testing', () => {
     equal(results[0].get('name'), group2.get('name'));
   });
 
-  it('withJSON supports geoWithin.centerSphere', done => {
+  it_exclude_dbs(['oracle'])('withJSON supports geoWithin.centerSphere', done => {
     const inbound = new Parse.GeoPoint(1.5, 1.5);
     const onbound = new Parse.GeoPoint(10, 10);
     const outbound = new Parse.GeoPoint(20, 20);

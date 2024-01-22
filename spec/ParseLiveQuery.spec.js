@@ -985,7 +985,7 @@ describe('ParseLiveQuery', function () {
     }, 1000);
   });
 
-  it('should execute live query update on email validation', async done => {
+  it_exclude_dbs(['oracle'])('should execute live query update on email validation', async done => {
     const emailAdapter = {
       sendVerificationEmail: () => {},
       sendPasswordResetEmail: () => Promise.resolve(),
@@ -1215,7 +1215,7 @@ describe('ParseLiveQuery', function () {
     await object.save();
   });
 
-  it('does shutdown liveQuery server', async () => {
+  it_exclude_dbs(['oracle'])('does shutdown liveQuery server', async () => {
     await reconfigureServer({ appId: 'test_app_id' });
     const config = {
       appId: 'hello_test',

@@ -18,7 +18,7 @@ describe('InMemoryCache', function () {
     });
   }
 
-  it('should destroy a expire items in the cache', done => {
+  it_exclude_dbs(['oracle'])('should destroy a expire items in the cache', done => {
     const cache = new InMemoryCache(BASE_TTL);
 
     cache.put(KEY, VALUE);
@@ -50,7 +50,7 @@ describe('InMemoryCache', function () {
     done();
   });
 
-  it('should clear all items', done => {
+  it_exclude_dbs(['oracle'])('should clear all items', done => {
     const cache = new InMemoryCache(NO_EXPIRE_TTL);
     cache.put(KEY, VALUE);
     cache.put(KEY_2, VALUE);

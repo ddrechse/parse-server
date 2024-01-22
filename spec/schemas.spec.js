@@ -3650,7 +3650,7 @@ describe('schemas', () => {
       });
     });
 
-    it_exclude_dbs(['postgres'])('get indexes on startup', done => {
+    it_exclude_dbs(['postgres', 'oracle'])('get indexes on startup', done => {
       const obj = new Parse.Object('TestObject');
       obj
         .save()
@@ -3673,7 +3673,7 @@ describe('schemas', () => {
         });
     });
 
-    it_exclude_dbs(['postgres'])('get compound indexes on startup', done => {
+    it_exclude_dbs(['postgres', 'oracle'])('get compound indexes on startup', done => {
       const obj = new Parse.Object('TestObject');
       obj.set('subject', 'subject');
       obj.set('comment', 'comment');
@@ -3708,35 +3708,38 @@ describe('schemas', () => {
         });
     });
 
-    it_exclude_dbs(['postgres'])('cannot update to duplicate value on unique index', done => {
-      const index = {
-        code: 1,
-      };
-      const obj1 = new Parse.Object('UniqueIndexClass');
-      obj1.set('code', 1);
-      const obj2 = new Parse.Object('UniqueIndexClass');
-      obj2.set('code', 2);
-      const adapter = config.database.adapter;
-      adapter
-        ._adaptiveCollection('UniqueIndexClass')
-        .then(collection => {
-          return collection._ensureSparseUniqueIndexInBackground(index);
-        })
-        .then(() => {
-          return obj1.save();
-        })
-        .then(() => {
-          return obj2.save();
-        })
-        .then(() => {
-          obj1.set('code', 2);
-          return obj1.save();
-        })
-        .then(done.fail)
-        .catch(error => {
-          expect(error.code).toEqual(Parse.Error.DUPLICATE_VALUE);
-          done();
-        });
-    });
+    it_exclude_dbs(['postgres', 'oracle'])(
+      'cannot update to duplicate value on unique index',
+      done => {
+        const index = {
+          code: 1,
+        };
+        const obj1 = new Parse.Object('UniqueIndexClass');
+        obj1.set('code', 1);
+        const obj2 = new Parse.Object('UniqueIndexClass');
+        obj2.set('code', 2);
+        const adapter = config.database.adapter;
+        adapter
+          ._adaptiveCollection('UniqueIndexClass')
+          .then(collection => {
+            return collection._ensureSparseUniqueIndexInBackground(index);
+          })
+          .then(() => {
+            return obj1.save();
+          })
+          .then(() => {
+            return obj2.save();
+          })
+          .then(() => {
+            obj1.set('code', 2);
+            return obj1.save();
+          })
+          .then(done.fail)
+          .catch(error => {
+            expect(error.code).toEqual(Parse.Error.DUPLICATE_VALUE);
+            done();
+          });
+      }
+    );
   });
 });

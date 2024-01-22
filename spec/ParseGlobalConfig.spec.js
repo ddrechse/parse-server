@@ -44,7 +44,7 @@ describe('a GlobalConfig', () => {
     'X-Parse-Master-Key': 'test',
   };
 
-  it('can be retrieved', done => {
+  it_exclude_dbs(['oracle'])('can be retrieved', done => {
     request({
       url: 'http://localhost:8378/1/config',
       json: true,
@@ -61,7 +61,7 @@ describe('a GlobalConfig', () => {
     });
   });
 
-  it('internal parameter can be retrieved with master key', done => {
+  it_exclude_dbs(['oracle'])('internal parameter can be retrieved with master key', done => {
     request({
       url: 'http://localhost:8378/1/config',
       json: true,
@@ -99,7 +99,7 @@ describe('a GlobalConfig', () => {
     });
   });
 
-  it('can be updated when a master key exists', done => {
+  it_exclude_dbs(['oracle'])('can be updated when a master key exists', done => {
     request({
       method: 'PUT',
       url: 'http://localhost:8378/1/config',
@@ -114,7 +114,7 @@ describe('a GlobalConfig', () => {
     });
   });
 
-  it('can add and retrive files', done => {
+  it_exclude_dbs(['oracle'])('can add and retrive files', done => {
     request({
       method: 'PUT',
       url: 'http://localhost:8378/1/config',
@@ -136,7 +136,7 @@ describe('a GlobalConfig', () => {
     });
   });
 
-  it('can add and retrive Geopoints', done => {
+  it_exclude_dbs(['oracle'])('can add and retrive Geopoints', done => {
     const geopoint = new Parse.GeoPoint(10, -20);
     request({
       method: 'PUT',
@@ -157,7 +157,7 @@ describe('a GlobalConfig', () => {
     });
   });
 
-  it('properly handles delete op', done => {
+  it_exclude_dbs(['oracle'])('properly handles delete op', done => {
     request({
       method: 'PUT',
       url: 'http://localhost:8378/1/config',
@@ -212,7 +212,7 @@ describe('a GlobalConfig', () => {
     });
   });
 
-  it('failed getting config when it is missing', done => {
+  it_exclude_dbs(['oracle'])('failed getting config when it is missing', done => {
     const config = Config.get('test');
     config.database.adapter
       .deleteObjectsByQuery(

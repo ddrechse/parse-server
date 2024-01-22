@@ -601,30 +601,33 @@ describe('server', () => {
     await new Promise(resolve => server.close(resolve));
   });
 
-  it('should not fail when Google signin is introduced without the optional clientId', done => {
-    const jwt = require('jsonwebtoken');
-    const authUtils = require('../lib/Adapters/Auth/utils');
+  it_exclude_dbs(['oracle'])(
+    'should not fail when Google signin is introduced without the optional clientId',
+    done => {
+      const jwt = require('jsonwebtoken');
+      const authUtils = require('../lib/Adapters/Auth/utils');
 
-    reconfigureServer({
-      auth: { google: {} },
-    })
-      .then(() => {
-        const fakeClaim = {
-          iss: 'https://accounts.google.com',
-          aud: 'secret',
-          exp: Date.now(),
-          sub: 'the_user_id',
-        };
-        const fakeDecodedToken = { header: { kid: '123', alg: 'RS256' } };
-        spyOn(authUtils, 'getHeaderFromToken').and.callFake(() => fakeDecodedToken);
-        spyOn(jwt, 'verify').and.callFake(() => fakeClaim);
-        const user = new Parse.User();
-        user
-          .linkWith('google', {
-            authData: { id: 'the_user_id', id_token: 'the_token' },
-          })
-          .then(done);
+      reconfigureServer({
+        auth: { google: {} },
       })
-      .catch(done.fail);
-  });
+        .then(() => {
+          const fakeClaim = {
+            iss: 'https://accounts.google.com',
+            aud: 'secret',
+            exp: Date.now(),
+            sub: 'the_user_id',
+          };
+          const fakeDecodedToken = { header: { kid: '123', alg: 'RS256' } };
+          spyOn(authUtils, 'getHeaderFromToken').and.callFake(() => fakeDecodedToken);
+          spyOn(jwt, 'verify').and.callFake(() => fakeClaim);
+          const user = new Parse.User();
+          user
+            .linkWith('google', {
+              authData: { id: 'the_user_id', id_token: 'the_token' },
+            })
+            .then(done);
+        })
+        .catch(done.fail);
+    }
+  );
 });

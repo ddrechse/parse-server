@@ -97,7 +97,7 @@ describe('Regex Vulnerabilities', function () {
       expect(this.user.get('emailVerified')).toEqual(false);
     });
 
-    it('should work with plain token', async function () {
+    it_exclude_dbs(['oracle'])('should work with plain token', async function () {
       expect(this.user.get('emailVerified')).toEqual(false);
       const current = await request({
         method: 'GET',

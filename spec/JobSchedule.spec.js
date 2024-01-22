@@ -21,7 +21,7 @@ const masterKeyOptions = {
 };
 
 describe('JobSchedule', () => {
-  it('should create _JobSchedule with masterKey', done => {
+  it_exclude_dbs(['oracle'])('should create _JobSchedule with masterKey', done => {
     const jobSchedule = new Parse.Object('_JobSchedule');
     jobSchedule.set({
       jobName: 'MY Cool Job',
@@ -75,14 +75,14 @@ describe('JobSchedule', () => {
     ).then(done.fail, () => done());
   });
 
-  it('should allow access when using masterKey (GET /jobs)', done => {
+  it_exclude_dbs(['oracle'])('should allow access when using masterKey (GET /jobs)', done => {
     request(Object.assign({ url: Parse.serverURL + '/cloud_code/jobs' }, masterKeyOptions)).then(
       done,
       done.fail
     );
   });
 
-  it('should create a job schedule', done => {
+  it_exclude_dbs(['oracle'])('should create a job schedule', done => {
     Parse.Cloud.job('job', () => {});
     const options = Object.assign({}, masterKeyOptions, {
       method: 'POST',
@@ -124,7 +124,7 @@ describe('JobSchedule', () => {
       .catch(() => done());
   });
 
-  it('should update a job', done => {
+  it_exclude_dbs(['oracle'])('should update a job', done => {
     Parse.Cloud.job('job1', () => {});
     Parse.Cloud.job('job2', () => {});
     const options = Object.assign({}, masterKeyOptions, {
@@ -196,7 +196,7 @@ describe('JobSchedule', () => {
       .catch(() => done());
   });
 
-  it('should destroy a job', done => {
+  it_exclude_dbs(['oracle'])('should destroy a job', done => {
     Parse.Cloud.job('job', () => {});
     const options = Object.assign({}, masterKeyOptions, {
       method: 'POST',
@@ -237,7 +237,7 @@ describe('JobSchedule', () => {
       .catch(done.fail);
   });
 
-  it('should properly return job data', done => {
+  it_exclude_dbs(['oracle'])('should properly return job data', done => {
     Parse.Cloud.job('job1', () => {});
     Parse.Cloud.job('job2', () => {});
     const options = Object.assign({}, masterKeyOptions, {

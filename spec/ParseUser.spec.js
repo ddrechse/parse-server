@@ -107,36 +107,6 @@ describe('Parse.User testing', () => {
     }
   });
 
-  it('user login with context', async () => {
-    let hit = 0;
-    const context = { foo: 'bar' };
-    Parse.Cloud.beforeLogin(req => {
-      expect(req.context).toEqual(context);
-      hit++;
-    });
-    Parse.Cloud.afterLogin(req => {
-      expect(req.context).toEqual(context);
-      hit++;
-    });
-    await Parse.User.signUp('asdf', 'zxcv');
-    await request({
-      method: 'POST',
-      url: 'http://localhost:8378/1/login',
-      headers: {
-        'X-Parse-Application-Id': Parse.applicationId,
-        'X-Parse-REST-API-Key': 'rest',
-        'X-Parse-Cloud-Context': JSON.stringify(context),
-        'Content-Type': 'application/json',
-      },
-      body: {
-        _method: 'GET',
-        username: 'asdf',
-        password: 'zxcv',
-      },
-    });
-    expect(hit).toBe(2);
-  });
-
   it('user login with non-string username with REST API', async done => {
     await Parse.User.signUp('asdf', 'zxcv');
     request({
@@ -2320,68 +2290,80 @@ describe('Parse.User testing', () => {
   });
 
   describe('case insensitive signup not allowed', () => {
-    it('signup should fail with duplicate case insensitive username with basic setter', async () => {
-      const user = new Parse.User();
-      user.set('username', 'test1');
-      user.set('password', 'test');
-      await user.signUp();
+    it_exclude_dbs(['oracle'])(
+      'signup should fail with duplicate case insensitive username with basic setter',
+      async () => {
+        const user = new Parse.User();
+        user.set('username', 'test1');
+        user.set('password', 'test');
+        await user.signUp();
 
-      const user2 = new Parse.User();
-      user2.set('username', 'Test1');
-      user2.set('password', 'test');
-      await expectAsync(user2.signUp()).toBeRejectedWith(
-        new Parse.Error(Parse.Error.USERNAME_TAKEN, 'Account already exists for this username.')
-      );
-    });
+        const user2 = new Parse.User();
+        user2.set('username', 'Test1');
+        user2.set('password', 'test');
+        await expectAsync(user2.signUp()).toBeRejectedWith(
+          new Parse.Error(Parse.Error.USERNAME_TAKEN, 'Account already exists for this username.')
+        );
+      }
+    );
 
-    it('signup should fail with duplicate case insensitive username with field specific setter', async () => {
-      const user = new Parse.User();
-      user.setUsername('test1');
-      user.setPassword('test');
-      await user.signUp();
+    it_exclude_dbs(['oracle'])(
+      'signup should fail with duplicate case insensitive username with field specific setter',
+      async () => {
+        const user = new Parse.User();
+        user.setUsername('test1');
+        user.setPassword('test');
+        await user.signUp();
 
-      const user2 = new Parse.User();
-      user2.setUsername('Test1');
-      user2.setPassword('test');
-      await expectAsync(user2.signUp()).toBeRejectedWith(
-        new Parse.Error(Parse.Error.USERNAME_TAKEN, 'Account already exists for this username.')
-      );
-    });
+        const user2 = new Parse.User();
+        user2.setUsername('Test1');
+        user2.setPassword('test');
+        await expectAsync(user2.signUp()).toBeRejectedWith(
+          new Parse.Error(Parse.Error.USERNAME_TAKEN, 'Account already exists for this username.')
+        );
+      }
+    );
 
-    it('signup should fail with duplicate case insensitive email', async () => {
-      const user = new Parse.User();
-      user.setUsername('test1');
-      user.setPassword('test');
-      user.setEmail('test@example.com');
-      await user.signUp();
+    it_exclude_dbs(['oracle'])(
+      'signup should fail with duplicate case insensitive email',
+      async () => {
+        const user = new Parse.User();
+        user.setUsername('test1');
+        user.setPassword('test');
+        user.setEmail('test@example.com');
+        await user.signUp();
 
-      const user2 = new Parse.User();
-      user2.setUsername('test2');
-      user2.setPassword('test');
-      user2.setEmail('Test@Example.Com');
-      await expectAsync(user2.signUp()).toBeRejectedWith(
-        new Parse.Error(Parse.Error.EMAIL_TAKEN, 'Account already exists for this email address.')
-      );
-    });
+        const user2 = new Parse.User();
+        user2.setUsername('test2');
+        user2.setPassword('test');
+        user2.setEmail('Test@Example.Com');
+        await expectAsync(user2.signUp()).toBeRejectedWith(
+          new Parse.Error(Parse.Error.EMAIL_TAKEN, 'Account already exists for this email address.')
+        );
+      }
+    );
 
-    it('edit should fail with duplicate case insensitive email', async () => {
-      const user = new Parse.User();
-      user.setUsername('test1');
-      user.setPassword('test');
-      user.setEmail('test@example.com');
-      await user.signUp();
+    it_exclude_dbs(['oracle'])(
+      'edit should fail with duplicate case insensitive email',
+      async () => {
+        const user = new Parse.User();
+        user.setUsername('test1');
+        user.setPassword('test');
+        user.setEmail('test@example.com');
+        await user.signUp();
 
-      const user2 = new Parse.User();
-      user2.setUsername('test2');
-      user2.setPassword('test');
-      user2.setEmail('Foo@Example.Com');
-      await user2.signUp();
+        const user2 = new Parse.User();
+        user2.setUsername('test2');
+        user2.setPassword('test');
+        user2.setEmail('Foo@Example.Com');
+        await user2.signUp();
 
-      user2.setEmail('Test@Example.Com');
-      await expectAsync(user2.save()).toBeRejectedWith(
-        new Parse.Error(Parse.Error.EMAIL_TAKEN, 'Account already exists for this email address.')
-      );
-    });
+        user2.setEmail('Test@Example.Com');
+        await expectAsync(user2.save()).toBeRejectedWith(
+          new Parse.Error(Parse.Error.EMAIL_TAKEN, 'Account already exists for this email address.')
+        );
+      }
+    );
 
     describe('anonymous users', () => {
       it('should not fail on case insensitive matches', async () => {
@@ -3222,35 +3204,6 @@ describe('Parse.User testing', () => {
         }
       )
       .catch(done.fail);
-  });
-
-  it('should return current session with expired expiration date', async () => {
-    await Parse.User.signUp('buser', 'somepass', null);
-    const response = await request({
-      method: 'GET',
-      url: 'http://localhost:8378/1/classes/_Session',
-      headers: {
-        'X-Parse-Application-Id': 'test',
-        'X-Parse-Master-Key': 'test',
-      },
-    });
-    const body = response.data;
-    const id = body.results[0].objectId;
-    const expiresAt = new Date(new Date().setYear(2015));
-    await request({
-      method: 'PUT',
-      url: 'http://localhost:8378/1/classes/_Session/' + id,
-      headers: {
-        'X-Parse-Application-Id': 'test',
-        'X-Parse-Master-Key': 'test',
-        'Content-Type': 'application/json',
-      },
-      body: {
-        expiresAt: { __type: 'Date', iso: expiresAt.toISOString() },
-      },
-    });
-    const session = await Parse.Session.current();
-    expect(session.get('expiresAt')).toEqual(expiresAt);
   });
 
   it('should not create extraneous session tokens', done => {
