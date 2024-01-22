@@ -2035,42 +2035,45 @@ describe('beforeSave hooks', () => {
     myObject.save().then(() => done());
   });
 
-  it('should respect custom object ids (#6733)', async () => {
-    Parse.Cloud.beforeSave('TestObject', req => {
-      expect(req.object.id).toEqual('test_6733');
-    });
+  it_id('fc14cee6-6e94-453a-b2d2-cc08b0c6e173')(
+    'should respect custom object ids (#6733)',
+    async () => {
+      Parse.Cloud.beforeSave('TestObject', req => {
+        expect(req.object.id).toEqual('test_6733');
+      });
 
-    await reconfigureServer({ allowCustomObjectId: true });
+      await reconfigureServer({ allowCustomObjectId: true });
 
-    const req = request({
-      // Parse JS SDK does not currently support custom object ids (see #1097), so we do a REST request
-      method: 'POST',
-      url: 'http://localhost:8378/1/classes/TestObject',
-      headers: {
-        'X-Parse-Application-Id': 'test',
-        'X-Parse-REST-API-Key': 'rest',
-      },
-      body: {
-        objectId: 'test_6733',
-        foo: 'bar',
-      },
-    });
+      const req = request({
+        // Parse JS SDK does not currently support custom object ids (see #1097), so we do a REST request
+        method: 'POST',
+        url: 'http://localhost:8378/1/classes/TestObject',
+        headers: {
+          'X-Parse-Application-Id': 'test',
+          'X-Parse-REST-API-Key': 'rest',
+        },
+        body: {
+          objectId: 'test_6733',
+          foo: 'bar',
+        },
+      });
 
-    {
-      const res = await req;
-      expect(res.data.objectId).toEqual('test_6733');
+      {
+        const res = await req;
+        expect(res.data.objectId).toEqual('test_6733');
+      }
+
+      const query = new Parse.Query('TestObject');
+      query.equalTo('objectId', 'test_6733');
+      const res = await query.find();
+      expect(res.length).toEqual(1);
+      expect(res[0].get('foo')).toEqual('bar');
     }
-
-    const query = new Parse.Query('TestObject');
-    query.equalTo('objectId', 'test_6733');
-    const res = await query.find();
-    expect(res.length).toEqual(1);
-    expect(res[0].get('foo')).toEqual('bar');
-  });
+  );
 });
 
 describe('afterSave hooks', () => {
-  it('should have request headers', done => {
+  it_id('a7b35f1a-380c-4387-92a1-013c2fdefd61')('should have request headers', done => {
     Parse.Cloud.afterSave('MyObject', req => {
       expect(req.headers).toBeDefined();
     });
@@ -2080,7 +2083,7 @@ describe('afterSave hooks', () => {
     myObject.save().then(() => done());
   });
 
-  it('should have request ip', done => {
+  it_id('dfdd8d59-0f01-4b88-83bd-b03acbca3b5d')('should have request ip', done => {
     Parse.Cloud.afterSave('MyObject', req => {
       expect(req.ip).toBeDefined();
     });
@@ -2090,7 +2093,7 @@ describe('afterSave hooks', () => {
     myObject.save().then(() => done());
   });
 
-  it('should unset in afterSave', async () => {
+  it_id('3bfdaef8-7478-4121-93ec-971177a09c6e')('should unset in afterSave', async () => {
     Parse.Cloud.afterSave(
       'MyObject',
       ({ object }) => {
@@ -2108,7 +2111,7 @@ describe('afterSave hooks', () => {
     expect(obj.get('secret')).toBe('bar');
   });
 
-  it('should unset', async () => {
+  it_id('401fbed5-bfda-405f-8bcb-8f536ca8a338')('should unset', async () => {
     Parse.Cloud.beforeSave('MyObject', ({ object }) => {
       object.set('secret', 'hidden');
     });
@@ -2135,7 +2138,7 @@ describe('beforeDelete hooks', () => {
       .then(() => done());
   });
 
-  it('should have request ip', done => {
+  it_id('869dadc5-f2ac-4b82-bc07-c4efe0576b5b')('should have request ip', done => {
     Parse.Cloud.beforeDelete('MyObject', req => {
       expect(req.ip).toBeDefined();
     });
@@ -2150,7 +2153,7 @@ describe('beforeDelete hooks', () => {
 });
 
 describe('afterDelete hooks', () => {
-  it('should have request headers', done => {
+  it_id('677c02d6-474e-4e36-94e7-69b728cc9bca')('should have request headers', done => {
     Parse.Cloud.afterDelete('MyObject', req => {
       expect(req.headers).toBeDefined();
     });
@@ -2415,7 +2418,7 @@ describe('beforeFind hooks', () => {
       .then(() => done());
   });
 
-  it('should have request ip', done => {
+  it_id('f8010b0f-b5cc-41a7-a822-61b9e404220c')('should have request ip', done => {
     Parse.Cloud.beforeFind('MyObject', req => {
       expect(req.ip).toBeDefined();
     });
@@ -2434,7 +2437,7 @@ describe('beforeFind hooks', () => {
 });
 
 describe('afterFind hooks', () => {
-  it('should add afterFind trigger', done => {
+  it_id('133202ee-c78c-4ba9-8047-db15039f6f30')('should add afterFind trigger', done => {
     Parse.Cloud.afterFind('MyObject', req => {
       const q = req.query;
       expect(q instanceof Parse.Query).toBe(true);
@@ -2562,7 +2565,7 @@ describe('afterFind hooks', () => {
     );
   });
 
-  it('should handle failures', done => {
+  it_id('58689b3a-eb2d-4ce2-a6d5-bcb3ab50aa0b')('should handle failures', done => {
     Parse.Cloud.afterFind('MyObject', () => {
       throw new Parse.Error(Parse.Error.SCRIPT_FAILED, 'It should fail');
     });
@@ -2699,7 +2702,7 @@ describe('afterFind hooks', () => {
     expect(pointer.get('foo')).toBe('bar');
   });
 
-  it('can set invalid object in afterFind', async () => {
+  it_id('d6480689-ca01-41c5-8442-f9df0cff387a')('can set invalid object in afterFind', async () => {
     const obj = new Parse.Object('MyObject');
     await obj.save();
     Parse.Cloud.afterFind('MyObject', () => [{}]);
@@ -3244,20 +3247,23 @@ describe('beforeLogin hook', () => {
     expect(response).toEqual(error);
   });
 
-  it('should have expected data in request', async done => {
-    Parse.Cloud.beforeLogin(req => {
-      expect(req.object).toBeDefined();
-      expect(req.user).toBeUndefined();
-      expect(req.headers).toBeDefined();
-      expect(req.ip).toBeDefined();
-      expect(req.installationId).toBeDefined();
-      expect(req.context).toBeUndefined();
-    });
+  it_id('cfd40e91-7155-45d4-9546-5f6b205adcc2')(
+    'should have expected data in request',
+    async done => {
+      Parse.Cloud.beforeLogin(req => {
+        expect(req.object).toBeDefined();
+        expect(req.user).toBeUndefined();
+        expect(req.headers).toBeDefined();
+        expect(req.ip).toBeDefined();
+        expect(req.installationId).toBeDefined();
+        expect(req.context).toBeUndefined();
+      });
 
-    await Parse.User.signUp('tupac', 'shakur');
-    await Parse.User.logIn('tupac', 'shakur');
-    done();
-  });
+      await Parse.User.signUp('tupac', 'shakur');
+      await Parse.User.logIn('tupac', 'shakur');
+      done();
+    }
+  );
 
   it('afterFind should not be triggered when saving an object', async () => {
     let beforeSaves = 0;
@@ -3361,20 +3367,23 @@ describe('afterLogin hook', () => {
     done();
   });
 
-  it('should have expected data in request', async done => {
-    Parse.Cloud.afterLogin(req => {
-      expect(req.object).toBeDefined();
-      expect(req.user).toBeDefined();
-      expect(req.headers).toBeDefined();
-      expect(req.ip).toBeDefined();
-      expect(req.installationId).toBeDefined();
-      expect(req.context).toBeUndefined();
-    });
+  it_id('30381402-faa2-4131-8c3a-86d70f1cd058')(
+    'should have expected data in request',
+    async done => {
+      Parse.Cloud.afterLogin(req => {
+        expect(req.object).toBeDefined();
+        expect(req.user).toBeDefined();
+        expect(req.headers).toBeDefined();
+        expect(req.ip).toBeDefined();
+        expect(req.installationId).toBeDefined();
+        expect(req.context).toBeUndefined();
+      });
 
-    await Parse.User.signUp('testuser', 'p@ssword');
-    await Parse.User.logIn('testuser', 'p@ssword');
-    done();
-  });
+      await Parse.User.signUp('testuser', 'p@ssword');
+      await Parse.User.logIn('testuser', 'p@ssword');
+      done();
+    }
+  );
 
   it('context options should override _context object property when saving a new object', async () => {
     Parse.Cloud.beforeSave('TestObject', req => {
