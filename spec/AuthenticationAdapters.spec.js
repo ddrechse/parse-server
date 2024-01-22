@@ -256,48 +256,54 @@ describe('AuthenticationProviders', function () {
       .catch(done.fail);
   });
 
-  it('should support loginWith with session token and with/without mutated authData', async () => {
-    const fakeAuthProvider = {
-      validateAppId: () => Promise.resolve(),
-      validateAuthData: () => Promise.resolve(),
-    };
-    const payload = { authData: { id: 'user1', token: 'fakeToken' } };
-    const payload2 = { authData: { id: 'user1', token: 'fakeToken2' } };
-    await reconfigureServer({ auth: { fakeAuthProvider } });
-    const user = await Parse.User.logInWith('fakeAuthProvider', payload);
-    const user2 = await Parse.User.logInWith('fakeAuthProvider', payload, {
-      sessionToken: user.getSessionToken(),
-    });
-    const user3 = await Parse.User.logInWith('fakeAuthProvider', payload2, {
-      sessionToken: user2.getSessionToken(),
-    });
-    expect(user.id).toEqual(user2.id);
-    expect(user.id).toEqual(user3.id);
-  });
+  it_id('df252757-c74b-4d45-9e09-d71da44e895f')(
+    'should support loginWith with session token and with/without mutated authData',
+    async () => {
+      const fakeAuthProvider = {
+        validateAppId: () => Promise.resolve(),
+        validateAuthData: () => Promise.resolve(),
+      };
+      const payload = { authData: { id: 'user1', token: 'fakeToken' } };
+      const payload2 = { authData: { id: 'user1', token: 'fakeToken2' } };
+      await reconfigureServer({ auth: { fakeAuthProvider } });
+      const user = await Parse.User.logInWith('fakeAuthProvider', payload);
+      const user2 = await Parse.User.logInWith('fakeAuthProvider', payload, {
+        sessionToken: user.getSessionToken(),
+      });
+      const user3 = await Parse.User.logInWith('fakeAuthProvider', payload2, {
+        sessionToken: user2.getSessionToken(),
+      });
+      expect(user.id).toEqual(user2.id);
+      expect(user.id).toEqual(user3.id);
+    }
+  );
 
-  it('should support sync/async validateAppId', async () => {
-    const syncProvider = {
-      validateAppId: () => true,
-      appIds: 'test',
-      validateAuthData: () => Promise.resolve(),
-    };
-    const asyncProvider = {
-      appIds: 'test',
-      validateAppId: () => Promise.resolve(true),
-      validateAuthData: () => Promise.resolve(),
-    };
-    const payload = { authData: { id: 'user1', token: 'fakeToken' } };
-    const syncSpy = spyOn(syncProvider, 'validateAppId');
-    const asyncSpy = spyOn(asyncProvider, 'validateAppId');
+  it_id('abdcda84-92b2-4e54-b5b1-bc1f977c18ce')(
+    'should support sync/async validateAppId',
+    async () => {
+      const syncProvider = {
+        validateAppId: () => true,
+        appIds: 'test',
+        validateAuthData: () => Promise.resolve(),
+      };
+      const asyncProvider = {
+        appIds: 'test',
+        validateAppId: () => Promise.resolve(true),
+        validateAuthData: () => Promise.resolve(),
+      };
+      const payload = { authData: { id: 'user1', token: 'fakeToken' } };
+      const syncSpy = spyOn(syncProvider, 'validateAppId');
+      const asyncSpy = spyOn(asyncProvider, 'validateAppId');
 
-    await reconfigureServer({ auth: { asyncProvider, syncProvider } });
-    const user = await Parse.User.logInWith('asyncProvider', payload);
-    const user2 = await Parse.User.logInWith('syncProvider', payload);
-    expect(user.getSessionToken()).toBeDefined();
-    expect(user2.getSessionToken()).toBeDefined();
-    expect(syncSpy).toHaveBeenCalledTimes(1);
-    expect(asyncSpy).toHaveBeenCalledTimes(1);
-  });
+      await reconfigureServer({ auth: { asyncProvider, syncProvider } });
+      const user = await Parse.User.logInWith('asyncProvider', payload);
+      const user2 = await Parse.User.logInWith('syncProvider', payload);
+      expect(user.getSessionToken()).toBeDefined();
+      expect(user2.getSessionToken()).toBeDefined();
+      expect(syncSpy).toHaveBeenCalledTimes(1);
+      expect(asyncSpy).toHaveBeenCalledTimes(1);
+    }
+  );
 
   it('unlink and link with custom provider', async () => {
     const provider = getMockMyOauthProvider();
