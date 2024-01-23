@@ -304,34 +304,40 @@ describe('Cloud Code Logger', () => {
       .then(null, e => done.fail(JSON.stringify(e)));
   }).pend('needs more work.....');
 
-  it('cloud function should obfuscate password', done => {
-    Parse.Cloud.define('testFunction', () => {
-      return 'verify code success';
-    });
+  it_id('48d6d82f-3dea-4b5c-98c2-128b77a2b152')(
+    'cloud function should obfuscate password',
+    done => {
+      Parse.Cloud.define('testFunction', () => {
+        return 'verify code success';
+      });
 
-    Parse.Cloud.run('testFunction', { username: 'hawk', password: '123456' })
-      .then(() => {
-        const entry = spy.calls.mostRecent().args;
-        expect(entry[2].params.password).toMatch(/\*\*\*\*\*\*\*\*/);
-        done();
-      })
-      .then(null, e => done.fail(e));
-  });
-
-  it('should only log once for object not found', async () => {
-    const config = Config.get('test');
-    const spy = spyOn(config.loggerController, 'error').and.callThrough();
-    try {
-      const object = new Parse.Object('Object');
-      object.id = 'invalid';
-      await object.fetch();
-    } catch (e) {
-      /**/
+      Parse.Cloud.run('testFunction', { username: 'hawk', password: '123456' })
+        .then(() => {
+          const entry = spy.calls.mostRecent().args;
+          expect(entry[2].params.password).toMatch(/\*\*\*\*\*\*\*\*/);
+          done();
+        })
+        .then(null, e => done.fail(e));
     }
-    expect(spy).toHaveBeenCalled();
-    expect(spy.calls.count()).toBe(1);
-    const { args } = spy.calls.mostRecent();
-    expect(args[0]).toBe('Parse error: ');
-    expect(args[1].message).toBe('Object not found.');
-  });
+  );
+
+  it_id('8ccaefa4-3249-4e5d-bcdf-b84f1d86b7d9')(
+    'should only log once for object not found',
+    async () => {
+      const config = Config.get('test');
+      const spy = spyOn(config.loggerController, 'error').and.callThrough();
+      try {
+        const object = new Parse.Object('Object');
+        object.id = 'invalid';
+        await object.fetch();
+      } catch (e) {
+        /**/
+      }
+      expect(spy).toHaveBeenCalled();
+      expect(spy.calls.count()).toBe(1);
+      const { args } = spy.calls.mostRecent();
+      expect(args[0]).toBe('Parse error: ');
+      expect(args[1].message).toBe('Object not found.');
+    }
+  );
 });

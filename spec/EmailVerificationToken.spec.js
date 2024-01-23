@@ -300,7 +300,7 @@ describe('Email Verification Token Expiration: ', () => {
     }
   );
 
-  it('can conditionally send emails', async () => {
+  it_id('2d5a92fa-ef01-45e8-90c6-d4f45bf3e7e8')('can conditionally send emails', async () => {
     let sendEmailOptions;
     const emailAdapter = {
       sendVerificationEmail: options => {
@@ -359,83 +359,89 @@ describe('Email Verification Token Expiration: ', () => {
     expect(verifySpy).toHaveBeenCalled();
   });
 
-  it('can conditionally send emails and allow conditional login', async () => {
-    let sendEmailOptions;
-    const emailAdapter = {
-      sendVerificationEmail: options => {
-        sendEmailOptions = options;
-      },
-      sendPasswordResetEmail: () => Promise.resolve(),
-      sendMail: () => {},
-    };
-    const verifyUserEmails = {
-      method(req) {
-        expect(Object.keys(req)).toEqual(['original', 'object', 'master', 'ip']);
-        if (req.object.get('username') === 'no_email') {
-          return false;
-        }
-        return true;
-      },
-    };
-    const verifySpy = spyOn(verifyUserEmails, 'method').and.callThrough();
-    await reconfigureServer({
-      appName: 'emailVerifyToken',
-      verifyUserEmails: verifyUserEmails.method,
-      preventLoginWithUnverifiedEmail: verifyUserEmails.method,
-      emailAdapter: emailAdapter,
-      emailVerifyTokenValidityDuration: 5, // 5 seconds
-      publicServerURL: 'http://localhost:8378/1',
-    });
-    const user = new Parse.User();
-    user.setUsername('no_email');
-    user.setPassword('expiringToken');
-    user.set('email', 'user@example.com');
-    await user.signUp();
-    expect(sendEmailOptions).toBeUndefined();
-    expect(user.getSessionToken()).toBeDefined();
-    expect(verifySpy).toHaveBeenCalledTimes(2);
-    const user2 = new Parse.User();
-    user2.setUsername('email');
-    user2.setPassword('expiringToken');
-    user2.set('email', 'user2@example.com');
-    await user2.signUp();
-    expect(user2.getSessionToken()).toBeUndefined();
-    expect(sendEmailOptions).toBeDefined();
-    expect(verifySpy).toHaveBeenCalledTimes(4);
-  });
+  it_id('c2d61922-ced0-492a-803f-d18bbfe0d15b')(
+    'can conditionally send emails and allow conditional login',
+    async () => {
+      let sendEmailOptions;
+      const emailAdapter = {
+        sendVerificationEmail: options => {
+          sendEmailOptions = options;
+        },
+        sendPasswordResetEmail: () => Promise.resolve(),
+        sendMail: () => {},
+      };
+      const verifyUserEmails = {
+        method(req) {
+          expect(Object.keys(req)).toEqual(['original', 'object', 'master', 'ip']);
+          if (req.object.get('username') === 'no_email') {
+            return false;
+          }
+          return true;
+        },
+      };
+      const verifySpy = spyOn(verifyUserEmails, 'method').and.callThrough();
+      await reconfigureServer({
+        appName: 'emailVerifyToken',
+        verifyUserEmails: verifyUserEmails.method,
+        preventLoginWithUnverifiedEmail: verifyUserEmails.method,
+        emailAdapter: emailAdapter,
+        emailVerifyTokenValidityDuration: 5, // 5 seconds
+        publicServerURL: 'http://localhost:8378/1',
+      });
+      const user = new Parse.User();
+      user.setUsername('no_email');
+      user.setPassword('expiringToken');
+      user.set('email', 'user@example.com');
+      await user.signUp();
+      expect(sendEmailOptions).toBeUndefined();
+      expect(user.getSessionToken()).toBeDefined();
+      expect(verifySpy).toHaveBeenCalledTimes(2);
+      const user2 = new Parse.User();
+      user2.setUsername('email');
+      user2.setPassword('expiringToken');
+      user2.set('email', 'user2@example.com');
+      await user2.signUp();
+      expect(user2.getSessionToken()).toBeUndefined();
+      expect(sendEmailOptions).toBeDefined();
+      expect(verifySpy).toHaveBeenCalledTimes(4);
+    }
+  );
 
-  it('can conditionally send user email verification', async () => {
-    const emailAdapter = {
-      sendVerificationEmail: () => {},
-      sendPasswordResetEmail: () => Promise.resolve(),
-      sendMail: () => {},
-    };
-    const sendVerificationEmail = {
-      method(req) {
-        expect(req.user).toBeDefined();
-        expect(req.master).toBeDefined();
-        return false;
-      },
-    };
-    const sendSpy = spyOn(sendVerificationEmail, 'method').and.callThrough();
-    await reconfigureServer({
-      appName: 'emailVerifyToken',
-      verifyUserEmails: true,
-      emailAdapter: emailAdapter,
-      emailVerifyTokenValidityDuration: 5, // 5 seconds
-      publicServerURL: 'http://localhost:8378/1',
-      sendUserEmailVerification: sendVerificationEmail.method,
-    });
-    const emailSpy = spyOn(emailAdapter, 'sendVerificationEmail').and.callThrough();
-    const newUser = new Parse.User();
-    newUser.setUsername('unsets_email_verify_token_expires_at');
-    newUser.setPassword('expiringToken');
-    newUser.set('email', 'user@example.com');
-    await newUser.signUp();
-    await Parse.User.requestEmailVerification('user@example.com');
-    expect(sendSpy).toHaveBeenCalledTimes(2);
-    expect(emailSpy).toHaveBeenCalledTimes(0);
-  });
+  it_id('10596f1b-4d4c-44f6-af80-8d16900c76b1')(
+    'can conditionally send user email verification',
+    async () => {
+      const emailAdapter = {
+        sendVerificationEmail: () => {},
+        sendPasswordResetEmail: () => Promise.resolve(),
+        sendMail: () => {},
+      };
+      const sendVerificationEmail = {
+        method(req) {
+          expect(req.user).toBeDefined();
+          expect(req.master).toBeDefined();
+          return false;
+        },
+      };
+      const sendSpy = spyOn(sendVerificationEmail, 'method').and.callThrough();
+      await reconfigureServer({
+        appName: 'emailVerifyToken',
+        verifyUserEmails: true,
+        emailAdapter: emailAdapter,
+        emailVerifyTokenValidityDuration: 5, // 5 seconds
+        publicServerURL: 'http://localhost:8378/1',
+        sendUserEmailVerification: sendVerificationEmail.method,
+      });
+      const emailSpy = spyOn(emailAdapter, 'sendVerificationEmail').and.callThrough();
+      const newUser = new Parse.User();
+      newUser.setUsername('unsets_email_verify_token_expires_at');
+      newUser.setPassword('expiringToken');
+      newUser.set('email', 'user@example.com');
+      await newUser.signUp();
+      await Parse.User.requestEmailVerification('user@example.com');
+      expect(sendSpy).toHaveBeenCalledTimes(2);
+      expect(emailSpy).toHaveBeenCalledTimes(0);
+    }
+  );
 
   it_exclude_dbs(['oracle'])('beforeSave options do not change existing behaviour', async () => {
     let sendEmailOptions;
@@ -728,89 +734,92 @@ describe('Email Verification Token Expiration: ', () => {
       });
   });
 
-  it('should send a new verification email when a resend is requested and the user is UNVERIFIED', done => {
-    const user = new Parse.User();
-    let sendEmailOptions;
-    let sendVerificationEmailCallCount = 0;
-    let userBeforeRequest;
-    const emailAdapter = {
-      sendVerificationEmail: options => {
-        sendEmailOptions = options;
-        sendVerificationEmailCallCount++;
-      },
-      sendPasswordResetEmail: () => Promise.resolve(),
-      sendMail: () => {},
-    };
-    reconfigureServer({
-      appName: 'emailVerifyToken',
-      verifyUserEmails: true,
-      emailAdapter: emailAdapter,
-      emailVerifyTokenValidityDuration: 5, // 5 seconds
-      publicServerURL: 'http://localhost:8378/1',
-    })
-      .then(() => {
-        user.setUsername('resends_verification_token');
-        user.setPassword('expiringToken');
-        user.set('email', 'user@parse.com');
-        return user.signUp();
+  it_id('63a8b5a6-26e1-43f4-a794-0d2b2cf654b4')(
+    'should send a new verification email when a resend is requested and the user is UNVERIFIED',
+    done => {
+      const user = new Parse.User();
+      let sendEmailOptions;
+      let sendVerificationEmailCallCount = 0;
+      let userBeforeRequest;
+      const emailAdapter = {
+        sendVerificationEmail: options => {
+          sendEmailOptions = options;
+          sendVerificationEmailCallCount++;
+        },
+        sendPasswordResetEmail: () => Promise.resolve(),
+        sendMail: () => {},
+      };
+      reconfigureServer({
+        appName: 'emailVerifyToken',
+        verifyUserEmails: true,
+        emailAdapter: emailAdapter,
+        emailVerifyTokenValidityDuration: 5, // 5 seconds
+        publicServerURL: 'http://localhost:8378/1',
       })
-      .then(() => {
-        const config = Config.get('test');
-        return config.database
-          .find('_User', { username: 'resends_verification_token' })
-          .then(results => {
-            return results[0];
+        .then(() => {
+          user.setUsername('resends_verification_token');
+          user.setPassword('expiringToken');
+          user.set('email', 'user@parse.com');
+          return user.signUp();
+        })
+        .then(() => {
+          const config = Config.get('test');
+          return config.database
+            .find('_User', { username: 'resends_verification_token' })
+            .then(results => {
+              return results[0];
+            });
+        })
+        .then(newUser => {
+          // store this user before we make our email request
+          userBeforeRequest = newUser;
+
+          expect(sendVerificationEmailCallCount).toBe(1);
+
+          return request({
+            url: 'http://localhost:8378/1/verificationEmailRequest',
+            method: 'POST',
+            body: {
+              email: 'user@parse.com',
+            },
+            headers: {
+              'X-Parse-Application-Id': Parse.applicationId,
+              'X-Parse-REST-API-Key': 'rest',
+              'Content-Type': 'application/json',
+            },
           });
-      })
-      .then(newUser => {
-        // store this user before we make our email request
-        userBeforeRequest = newUser;
+        })
+        .then(response => {
+          expect(response.status).toBe(200);
+          expect(sendVerificationEmailCallCount).toBe(2);
+          expect(sendEmailOptions).toBeDefined();
 
-        expect(sendVerificationEmailCallCount).toBe(1);
-
-        return request({
-          url: 'http://localhost:8378/1/verificationEmailRequest',
-          method: 'POST',
-          body: {
-            email: 'user@parse.com',
-          },
-          headers: {
-            'X-Parse-Application-Id': Parse.applicationId,
-            'X-Parse-REST-API-Key': 'rest',
-            'Content-Type': 'application/json',
-          },
+          // query for this user again
+          const config = Config.get('test');
+          return config.database
+            .find('_User', { username: 'resends_verification_token' }, {}, Auth.maintenance(config))
+            .then(results => {
+              return results[0];
+            });
+        })
+        .then(userAfterRequest => {
+          // verify that our token & expiration has been changed for this new request
+          expect(typeof userAfterRequest).toBe('object');
+          expect(userBeforeRequest._email_verify_token).not.toEqual(
+            userAfterRequest._email_verify_token
+          );
+          expect(userBeforeRequest._email_verify_token_expires_at).not.toEqual(
+            userAfterRequest._email_verify_token_expires_at
+          );
+          done();
+        })
+        .catch(error => {
+          console.log(error);
+          jfail(error);
+          done();
         });
-      })
-      .then(response => {
-        expect(response.status).toBe(200);
-        expect(sendVerificationEmailCallCount).toBe(2);
-        expect(sendEmailOptions).toBeDefined();
-
-        // query for this user again
-        const config = Config.get('test');
-        return config.database
-          .find('_User', { username: 'resends_verification_token' }, {}, Auth.maintenance(config))
-          .then(results => {
-            return results[0];
-          });
-      })
-      .then(userAfterRequest => {
-        // verify that our token & expiration has been changed for this new request
-        expect(typeof userAfterRequest).toBe('object');
-        expect(userBeforeRequest._email_verify_token).not.toEqual(
-          userAfterRequest._email_verify_token
-        );
-        expect(userBeforeRequest._email_verify_token_expires_at).not.toEqual(
-          userAfterRequest._email_verify_token_expires_at
-        );
-        done();
-      })
-      .catch(error => {
-        console.log(error);
-        jfail(error);
-        done();
-      });
-  });
+    }
+  );
 
   it('should throw with invalid emailVerifyTokenReuseIfValid', async done => {
     const sendEmailOptions = [];
@@ -851,70 +860,73 @@ describe('Email Verification Token Expiration: ', () => {
     done();
   });
 
-  it('should match codes with emailVerifyTokenReuseIfValid', async done => {
-    let sendEmailOptions;
-    let sendVerificationEmailCallCount = 0;
-    const emailAdapter = {
-      sendVerificationEmail: options => {
-        sendEmailOptions = options;
-        sendVerificationEmailCallCount++;
-      },
-      sendPasswordResetEmail: () => Promise.resolve(),
-      sendMail: () => {},
-    };
-    await reconfigureServer({
-      appName: 'emailVerifyToken',
-      verifyUserEmails: true,
-      emailAdapter: emailAdapter,
-      emailVerifyTokenValidityDuration: 5 * 60, // 5 minutes
-      publicServerURL: 'http://localhost:8378/1',
-      emailVerifyTokenReuseIfValid: true,
-    });
-    const user = new Parse.User();
-    user.setUsername('resends_verification_token');
-    user.setPassword('expiringToken');
-    user.set('email', 'user@example.com');
-    await user.signUp();
+  it_id('fe88850d-60ce-4986-a3eb-5cacae00b320')(
+    'should match codes with emailVerifyTokenReuseIfValid',
+    async done => {
+      let sendEmailOptions;
+      let sendVerificationEmailCallCount = 0;
+      const emailAdapter = {
+        sendVerificationEmail: options => {
+          sendEmailOptions = options;
+          sendVerificationEmailCallCount++;
+        },
+        sendPasswordResetEmail: () => Promise.resolve(),
+        sendMail: () => {},
+      };
+      await reconfigureServer({
+        appName: 'emailVerifyToken',
+        verifyUserEmails: true,
+        emailAdapter: emailAdapter,
+        emailVerifyTokenValidityDuration: 5 * 60, // 5 minutes
+        publicServerURL: 'http://localhost:8378/1',
+        emailVerifyTokenReuseIfValid: true,
+      });
+      const user = new Parse.User();
+      user.setUsername('resends_verification_token');
+      user.setPassword('expiringToken');
+      user.set('email', 'user@example.com');
+      await user.signUp();
 
-    const config = Config.get('test');
-    const [userBeforeRequest] = await config.database.find('_User', {
-      username: 'resends_verification_token',
-    });
-    // store this user before we make our email request
-    expect(sendVerificationEmailCallCount).toBe(1);
-    await new Promise(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, 1000);
-    });
-    const response = await request({
-      url: 'http://localhost:8378/1/verificationEmailRequest',
-      method: 'POST',
-      body: {
-        email: 'user@example.com',
-      },
-      headers: {
-        'X-Parse-Application-Id': Parse.applicationId,
-        'X-Parse-REST-API-Key': 'rest',
-        'Content-Type': 'application/json',
-      },
-    });
-    expect(response.status).toBe(200);
-    expect(sendVerificationEmailCallCount).toBe(2);
-    expect(sendEmailOptions).toBeDefined();
+      const config = Config.get('test');
+      const [userBeforeRequest] = await config.database.find('_User', {
+        username: 'resends_verification_token',
+      });
+      // store this user before we make our email request
+      expect(sendVerificationEmailCallCount).toBe(1);
+      await new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, 1000);
+      });
+      const response = await request({
+        url: 'http://localhost:8378/1/verificationEmailRequest',
+        method: 'POST',
+        body: {
+          email: 'user@example.com',
+        },
+        headers: {
+          'X-Parse-Application-Id': Parse.applicationId,
+          'X-Parse-REST-API-Key': 'rest',
+          'Content-Type': 'application/json',
+        },
+      });
+      expect(response.status).toBe(200);
+      expect(sendVerificationEmailCallCount).toBe(2);
+      expect(sendEmailOptions).toBeDefined();
 
-    const [userAfterRequest] = await config.database.find('_User', {
-      username: 'resends_verification_token',
-    });
+      const [userAfterRequest] = await config.database.find('_User', {
+        username: 'resends_verification_token',
+      });
 
-    // verify that our token & expiration has been changed for this new request
-    expect(typeof userAfterRequest).toBe('object');
-    expect(userBeforeRequest._email_verify_token).toEqual(userAfterRequest._email_verify_token);
-    expect(userBeforeRequest._email_verify_token_expires_at).toEqual(
-      userAfterRequest._email_verify_token_expires_at
-    );
-    done();
-  });
+      // verify that our token & expiration has been changed for this new request
+      expect(typeof userAfterRequest).toBe('object');
+      expect(userBeforeRequest._email_verify_token).toEqual(userAfterRequest._email_verify_token);
+      expect(userBeforeRequest._email_verify_token_expires_at).toEqual(
+        userAfterRequest._email_verify_token_expires_at
+      );
+      done();
+    }
+  );
 
   it_exclude_dbs(['oracle'])(
     'should not send a new verification email when a resend is requested and the user is VERIFIED',
