@@ -60,7 +60,7 @@ describe('Cloud Code Logger', () => {
     });
   });
 
-  it('trigger should obfuscate password', done => {
+  it_id('0ab8bca4-b20e-4ec2-8a51-1211f677ab64')('trigger should obfuscate password', done => {
     Parse.Cloud.beforeSave(Parse.User, req => {
       return req.object;
     });
@@ -218,40 +218,43 @@ describe('Cloud Code Logger', () => {
     }
   });
 
-  it('should log cloud function triggers using the custom log level', async () => {
-    Parse.Cloud.beforeSave('TestClass', () => {});
-    Parse.Cloud.afterSave('TestClass', () => {});
+  it_id('bd1aabdf-d1ff-43a0-b8ee-2bf7de1ecf92')(
+    'should log cloud function triggers using the custom log level',
+    async () => {
+      Parse.Cloud.beforeSave('TestClass', () => {});
+      Parse.Cloud.afterSave('TestClass', () => {});
 
-    const execTest = async (logLevel, triggerBeforeSuccess, triggerAfter) => {
-      await reconfigureServer({
-        silent: true,
-        logLevel,
-        logLevels: {
-          triggerAfter,
-          triggerBeforeSuccess,
-        },
-      });
+      const execTest = async (logLevel, triggerBeforeSuccess, triggerAfter) => {
+        await reconfigureServer({
+          silent: true,
+          logLevel,
+          logLevels: {
+            triggerAfter,
+            triggerBeforeSuccess,
+          },
+        });
 
-      spy = spyOn(Config.get('test').loggerController.adapter, 'log').and.callThrough();
-      const obj = new Parse.Object('TestClass');
-      await obj.save();
+        spy = spyOn(Config.get('test').loggerController.adapter, 'log').and.callThrough();
+        const obj = new Parse.Object('TestClass');
+        await obj.save();
 
-      return {
-        beforeSave: spy.calls
-          .allArgs()
-          .find(log => log[1].startsWith('beforeSave triggered for TestClass for user '))?.[0],
-        afterSave: spy.calls
-          .allArgs()
-          .find(log => log[1].startsWith('afterSave triggered for TestClass for user '))?.[0],
+        return {
+          beforeSave: spy.calls
+            .allArgs()
+            .find(log => log[1].startsWith('beforeSave triggered for TestClass for user '))?.[0],
+          afterSave: spy.calls
+            .allArgs()
+            .find(log => log[1].startsWith('afterSave triggered for TestClass for user '))?.[0],
+        };
       };
-    };
 
-    let calls = await execTest('silly', 'silly', 'debug');
-    expect(calls).toEqual({ beforeSave: 'silly', afterSave: 'debug' });
+      let calls = await execTest('silly', 'silly', 'debug');
+      expect(calls).toEqual({ beforeSave: 'silly', afterSave: 'debug' });
 
-    calls = await execTest('info', 'warn', 'debug');
-    expect(calls).toEqual({ beforeSave: 'warn', afterSave: undefined });
-  });
+      calls = await execTest('info', 'warn', 'debug');
+      expect(calls).toEqual({ beforeSave: 'warn', afterSave: undefined });
+    }
+  );
 
   it('should log cloud function failure', done => {
     Parse.Cloud.define('aFunction', () => {
