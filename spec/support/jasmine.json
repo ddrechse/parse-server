@@ -1,6 +1,7 @@
 {
   "spec_dir": "spec",
-  "spec_files": ["AccountLockoutPolicy.spec.js", "AdaptableController.spec.js", "AdapterLoader.spec.js", "AggregateRouter.spec.js", "Analytics.spec.js", "AudienceRouter.spec.js", "Auth.spec.js"],
+  "spec_files": ["AccountLockoutPolicy.spec.js", "AdaptableController.spec.js", "AdapterLoader.spec.js", "AggregateRouter.spec.js", "Analytics.spec.js", "AudienceRouter.spec.js",
+   "Auth.spec.js", "AuthenticationAdapters.spec.js", "AuthenticationAdaptersV2.spec.js"],
   "helpers": ["helper.js"],
   "random": false
 }
