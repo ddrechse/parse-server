@@ -515,7 +515,7 @@ describe('server', () => {
       .catch(done.fail);
   });
 
-  it('can call start', async () => {
+  it_id('72dca7e7-c127-437b-9b9d-7e3e3e91cb0e')('can call start', async () => {
     await reconfigureServer({ appId: 'aTestApp' });
     const config = {
       ...defaultConfiguration,
@@ -535,7 +535,7 @@ describe('server', () => {
     await new Promise(resolve => server.close(resolve));
   });
 
-  it('start is required to mount', async () => {
+  it_id('a38687aa-96f2-4d89-b6c2-1ff300d6aa47')('start is required to mount', async () => {
     await reconfigureServer({ appId: 'aTestApp' });
     const config = {
       ...defaultConfiguration,

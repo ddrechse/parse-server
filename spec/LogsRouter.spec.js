@@ -75,50 +75,19 @@ describe_only(() => {
   /**
    * Verifies simple passwords in GET login requests with special characters are scrubbed from the verbose log
    */
-  it('does scrub simple passwords on GET login', done => {
-    reconfigureServer({
-      verbose: true,
-    }).then(function () {
-      request({
-        headers: headers,
-        url: 'http://localhost:8378/1/login?username=test&password=simplepass.com',
-      })
-        .catch(() => {})
-        .then(() => {
-          request({
-            url: 'http://localhost:8378/1/scriptlog?size=4&level=verbose',
-            headers: headers,
-          }).then(response => {
-            const body = response.data;
-            expect(response.status).toEqual(200);
-            // 4th entry is our actual GET request
-            expect(body[2].url).toEqual('/1/login?username=test&password=********');
-            expect(body[2].message).toEqual(
-              'REQUEST for [GET] /1/login?username=test&password=********: {}'
-            );
-            done();
-          });
-        });
-    });
-  });
-
-  /**
-   * Verifies complex passwords in GET login requests with special characters are scrubbed from the verbose log
-   */
-  it('does scrub complex passwords on GET login', done => {
-    reconfigureServer({
-      verbose: true,
-    })
-      .then(function () {
-        return request({
+  it_id('cce38467-b1b7-4cb1-b6a6-086fc7817dc3')(
+    'does scrub simple passwords on GET login',
+    done => {
+      reconfigureServer({
+        verbose: true,
+      }).then(function () {
+        request({
           headers: headers,
-          // using urlencoded password, 'simple @,/?:&=+$#pass.com'
-          url:
-            'http://localhost:8378/1/login?username=test&password=simple%20%40%2C%2F%3F%3A%26%3D%2B%24%23pass.com',
+          url: 'http://localhost:8378/1/login?username=test&password=simplepass.com',
         })
           .catch(() => {})
           .then(() => {
-            return request({
+            request({
               url: 'http://localhost:8378/1/scriptlog?size=4&level=verbose',
               headers: headers,
             }).then(response => {
@@ -132,42 +101,82 @@ describe_only(() => {
               done();
             });
           });
+      });
+    }
+  );
+
+  /**
+   * Verifies complex passwords in GET login requests with special characters are scrubbed from the verbose log
+   */
+  it_id('1f04ed5e-aa8b-4386-a123-8cef8d495e2a')(
+    'does scrub complex passwords on GET login',
+    done => {
+      reconfigureServer({
+        verbose: true,
       })
-      .catch(done.fail);
-  });
+        .then(function () {
+          return request({
+            headers: headers,
+            // using urlencoded password, 'simple @,/?:&=+$#pass.com'
+            url:
+              'http://localhost:8378/1/login?username=test&password=simple%20%40%2C%2F%3F%3A%26%3D%2B%24%23pass.com',
+          })
+            .catch(() => {})
+            .then(() => {
+              return request({
+                url: 'http://localhost:8378/1/scriptlog?size=4&level=verbose',
+                headers: headers,
+              }).then(response => {
+                const body = response.data;
+                expect(response.status).toEqual(200);
+                // 4th entry is our actual GET request
+                expect(body[2].url).toEqual('/1/login?username=test&password=********');
+                expect(body[2].message).toEqual(
+                  'REQUEST for [GET] /1/login?username=test&password=********: {}'
+                );
+                done();
+              });
+            });
+        })
+        .catch(done.fail);
+    }
+  );
 
   /**
    * Verifies fields in POST login requests are NOT present in the verbose log
    */
-  it('does not have password field in POST login', done => {
-    reconfigureServer({
-      verbose: true,
-    }).then(function () {
-      request({
-        method: 'POST',
-        headers: headers,
-        url: 'http://localhost:8378/1/login',
-        body: {
-          username: 'test',
-          password: 'simplepass.com',
-        },
-      })
-        .catch(() => {})
-        .then(() => {
-          request({
-            url: 'http://localhost:8378/1/scriptlog?size=4&level=verbose',
-            headers: headers,
-          }).then(response => {
-            const body = response.data;
-            expect(response.status).toEqual(200);
-            // 4th entry is our actual GET request
-            expect(body[2].url).toEqual('/1/login');
-            expect(body[2].message).toEqual(
-              'REQUEST for [POST] /1/login: {\n  "username": "test",\n  "password": "********"\n}'
-            );
-            done();
+  it_id('5f6d0155-876c-4a32-8b2a-05c433efa864')(
+    'does not have password field in POST login',
+    done => {
+      reconfigureServer({
+        verbose: true,
+      }).then(function () {
+        request({
+          method: 'POST',
+          headers: headers,
+          url: 'http://localhost:8378/1/login',
+          body: {
+            username: 'test',
+            password: 'simplepass.com',
+          },
+        })
+          .catch(() => {})
+          .then(() => {
+            request({
+              url: 'http://localhost:8378/1/scriptlog?size=4&level=verbose',
+              headers: headers,
+            }).then(response => {
+              const body = response.data;
+              expect(response.status).toEqual(200);
+              // 4th entry is our actual GET request
+              expect(body[2].url).toEqual('/1/login');
+              expect(body[2].message).toEqual(
+                'REQUEST for [POST] /1/login: {\n  "username": "test",\n  "password": "********"\n}'
+              );
+              done();
+            });
           });
-        });
-    });
-  });
+      });
+    }
+  );
 });
