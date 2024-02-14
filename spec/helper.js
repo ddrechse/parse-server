@@ -205,8 +205,12 @@ beforeAll(async () => {
 beforeEach(() => {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = process.env.PARSE_SERVER_TEST_TIMEOUT || 10000;
   // CDD Add a second sleep prior to each test
-  delay(5000);
+  cdd();
 });
+
+async function cdd() {
+  await delay(5000);
+}
 
 function delay(time) {
   return new Promise(resolve => setTimeout(resolve, time));
