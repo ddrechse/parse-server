@@ -202,19 +202,12 @@ beforeAll(async () => {
   Parse.serverURL = 'http://localhost:' + port + '/1';
 });
 
-beforeEach(() => {
+beforeEach(done => {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = process.env.PARSE_SERVER_TEST_TIMEOUT || 10000;
-  // CDD Add a second sleep prior to each test
-  cdd();
+  setTimeout(() => {
+    done();
+  }, 1000);
 });
-
-async function cdd() {
-  await delay(5000);
-}
-
-function delay(time) {
-  return new Promise(resolve => setTimeout(resolve, time));
-}
 
 afterEach(function (done) {
   const afterLogOut = async () => {
