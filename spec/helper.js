@@ -205,6 +205,7 @@ beforeAll(async () => {
 beforeEach(done => {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = process.env.PARSE_SERVER_TEST_TIMEOUT || 10000;
   setTimeout(() => {
+    console.log('In Timeout');
     done();
   }, 1000);
 });
