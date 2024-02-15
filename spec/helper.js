@@ -202,12 +202,12 @@ beforeAll(async () => {
   Parse.serverURL = 'http://localhost:' + port + '/1';
 });
 
-beforeEach(done => {
+beforeEach(() => {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = process.env.PARSE_SERVER_TEST_TIMEOUT || 10000;
-  setTimeout(() => {
+  /*  setTimeout(() => {
     console.log('In Timeout');
     done();
-  }, 1000);
+  }, 1000);*/
 });
 
 afterEach(function (done) {
