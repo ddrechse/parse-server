@@ -317,7 +317,8 @@ describe('AudiencesRouter', () => {
     );
   });
 
-  it_exclude_dbs(['postgres', 'oracle'])(
+  it_exclude_dbs(['postgres'])(
+    //  it_exclude_dbs(['postgres', 'oracle'])(
     'should support legacy parse.com audience fields',
     done => {
       const database = Config.get(Parse.applicationId).database.adapter.database;
