@@ -324,7 +324,7 @@ describe('Security Check', () => {
       });
     });
 
-    it('logs report', async () => {
+    it_id('6ab3e7c6-ac66-4b91-b7d2-d57ba6101683')('logs report', async () => {
       const logger = require('../lib/logger').logger;
       const logSpy = spyOn(logger, 'warn').and.callThrough();
       const checkGroups = [Group];

@@ -392,7 +392,7 @@ describe('RestQuery.each', () => {
   beforeEach(() => {
     config = Config.get('test');
   });
-  it('should run each', async () => {
+  it_id('0b8a148d-ee73-4686-9170-3a6d63067073')('should run each', async () => {
     const objects = [];
     while (objects.length != 10) {
       objects.push(new Parse.Object('Object', { value: objects.length }));
@@ -418,7 +418,7 @@ describe('RestQuery.each', () => {
     expect(results.length).toBe(7);
   });
 
-  it('should work with query on relations', async () => {
+  it_id('189aec86-baa5-4ea9-8237-93655ab7b994')('should work with query on relations', async () => {
     const objectA = new Parse.Object('Letter', { value: 'A' });
     const objectB = new Parse.Object('Letter', { value: 'B' });
 

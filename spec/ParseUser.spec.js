@@ -2997,70 +2997,73 @@ describe('Parse.User testing', () => {
       });
   });
 
-  it('should send email when upgrading from anon', async done => {
-    await reconfigureServer();
-    let emailCalled = false;
-    let emailOptions;
-    const emailAdapter = {
-      sendVerificationEmail: options => {
-        emailOptions = options;
-        emailCalled = true;
-      },
-      sendPasswordResetEmail: () => Promise.resolve(),
-      sendMail: () => Promise.resolve(),
-    };
-    await reconfigureServer({
-      appName: 'unused',
-      verifyUserEmails: true,
-      emailAdapter: emailAdapter,
-      publicServerURL: 'http://localhost:8378/1',
-    });
-    // Simulate anonymous user save
-    return request({
-      method: 'POST',
-      url: 'http://localhost:8378/1/classes/_User',
-      headers: {
-        'X-Parse-Application-Id': Parse.applicationId,
-        'X-Parse-REST-API-Key': 'rest',
-        'Content-Type': 'application/json',
-      },
-      body: {
-        authData: {
-          anonymous: { id: '00000000-0000-0000-0000-000000000001' },
+  it_id('1aeae044-b736-4670-8a49-b8831152ea45')(
+    'should send email when upgrading from anon',
+    async done => {
+      await reconfigureServer();
+      let emailCalled = false;
+      let emailOptions;
+      const emailAdapter = {
+        sendVerificationEmail: options => {
+          emailOptions = options;
+          emailCalled = true;
         },
-      },
-    })
-      .then(response => {
-        const user = response.data;
-        return request({
-          method: 'PUT',
-          url: 'http://localhost:8378/1/classes/_User/' + user.objectId,
-          headers: {
-            'X-Parse-Application-Id': Parse.applicationId,
-            'X-Parse-Session-Token': user.sessionToken,
-            'X-Parse-REST-API-Key': 'rest',
-            'Content-Type': 'application/json',
-          },
-          body: {
-            authData: { anonymous: null },
-            username: 'user',
-            email: 'user@email.com',
-            password: 'password',
-          },
-        });
-      })
-      .then(() => {
-        expect(emailCalled).toBe(true);
-        expect(emailOptions).not.toBeUndefined();
-        expect(emailOptions.user.get('email')).toEqual('user@email.com');
-        done();
-      })
-      .catch(err => {
-        jfail(err);
-        fail('no request should fail: ' + JSON.stringify(err));
-        done();
+        sendPasswordResetEmail: () => Promise.resolve(),
+        sendMail: () => Promise.resolve(),
+      };
+      await reconfigureServer({
+        appName: 'unused',
+        verifyUserEmails: true,
+        emailAdapter: emailAdapter,
+        publicServerURL: 'http://localhost:8378/1',
       });
-  });
+      // Simulate anonymous user save
+      return request({
+        method: 'POST',
+        url: 'http://localhost:8378/1/classes/_User',
+        headers: {
+          'X-Parse-Application-Id': Parse.applicationId,
+          'X-Parse-REST-API-Key': 'rest',
+          'Content-Type': 'application/json',
+        },
+        body: {
+          authData: {
+            anonymous: { id: '00000000-0000-0000-0000-000000000001' },
+          },
+        },
+      })
+        .then(response => {
+          const user = response.data;
+          return request({
+            method: 'PUT',
+            url: 'http://localhost:8378/1/classes/_User/' + user.objectId,
+            headers: {
+              'X-Parse-Application-Id': Parse.applicationId,
+              'X-Parse-Session-Token': user.sessionToken,
+              'X-Parse-REST-API-Key': 'rest',
+              'Content-Type': 'application/json',
+            },
+            body: {
+              authData: { anonymous: null },
+              username: 'user',
+              email: 'user@email.com',
+              password: 'password',
+            },
+          });
+        })
+        .then(() => {
+          expect(emailCalled).toBe(true);
+          expect(emailOptions).not.toBeUndefined();
+          expect(emailOptions.user.get('email')).toEqual('user@email.com');
+          done();
+        })
+        .catch(err => {
+          jfail(err);
+          fail('no request should fail: ' + JSON.stringify(err));
+          done();
+        });
+    }
+  );
 
   it('should not send email when email is not a string', async done => {
     let emailCalled = false;

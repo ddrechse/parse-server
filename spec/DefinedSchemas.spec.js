@@ -152,7 +152,7 @@ describe('DefinedSchemas', () => {
       installationSchema = await new Parse.Schema('_Installation').get();
       expect(installationSchema.fields).toEqual(expectedInstallationFields);
     });
-    it('should create new fields', async () => {
+    it_id('aba68c37-4919-44ff-832e-b6aa46c61dc6')('should create new fields', async () => {
       const server = await reconfigureServer();
       const fields = {
         objectId: { type: 'String' },
@@ -327,7 +327,7 @@ describe('DefinedSchemas', () => {
   });
 
   describe('Indexes', () => {
-    it('should create new indexes', async () => {
+    it_id('f5f0d97b-6023-469f-97a9-9b79d5f2ca40')('should create new indexes', async () => {
       const server = await reconfigureServer();
 
       const indexes = { complex: { createdAt: 1, updatedAt: 1 } };
@@ -347,7 +347,7 @@ describe('DefinedSchemas', () => {
       cleanUpIndexes(schema);
       expect(schema.indexes).toEqual(indexes);
     });
-    it('should re create changed indexes', async () => {
+    it_id('b313aa67-def8-47fe-8319-6e658ff648be')('should re create changed indexes', async () => {
       const server = await reconfigureServer();
 
       let indexes = { complex: { createdAt: 1, updatedAt: 1 } };

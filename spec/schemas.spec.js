@@ -2960,7 +2960,7 @@ describe('schemas', () => {
       });
     });
 
-    it('can create index on default field', done => {
+    it_id('85b5ba18-5bb2-4c2a-a8a1-8a923cba6a48')('can create index on default field', done => {
       request({
         url: 'http://localhost:8378/1/schemas/NewClass',
         method: 'POST',
@@ -3014,42 +3014,45 @@ describe('schemas', () => {
       });
     });
 
-    it('allows add index when you create a class', done => {
-      request({
-        url: 'http://localhost:8378/1/schemas',
-        method: 'POST',
-        headers: masterKeyHeaders,
-        json: true,
-        body: {
-          className: 'NewClass',
-          fields: {
-            aString: { type: 'String' },
+    it_id('7e3bcb26-5376-4962-a356-0612141b34ca')(
+      'allows add index when you create a class',
+      done => {
+        request({
+          url: 'http://localhost:8378/1/schemas',
+          method: 'POST',
+          headers: masterKeyHeaders,
+          json: true,
+          body: {
+            className: 'NewClass',
+            fields: {
+              aString: { type: 'String' },
+            },
+            indexes: {
+              name1: { aString: 1 },
+            },
           },
-          indexes: {
-            name1: { aString: 1 },
-          },
-        },
-      }).then(response => {
-        expect(response.data).toEqual({
-          className: 'NewClass',
-          fields: {
-            ACL: { type: 'ACL' },
-            createdAt: { type: 'Date' },
-            updatedAt: { type: 'Date' },
-            objectId: { type: 'String' },
-            aString: { type: 'String' },
-          },
-          classLevelPermissions: defaultClassLevelPermissions,
-          indexes: {
-            name1: { aString: 1 },
-          },
+        }).then(response => {
+          expect(response.data).toEqual({
+            className: 'NewClass',
+            fields: {
+              ACL: { type: 'ACL' },
+              createdAt: { type: 'Date' },
+              updatedAt: { type: 'Date' },
+              objectId: { type: 'String' },
+              aString: { type: 'String' },
+            },
+            classLevelPermissions: defaultClassLevelPermissions,
+            indexes: {
+              name1: { aString: 1 },
+            },
+          });
+          config.database.adapter.getIndexes('NewClass').then(indexes => {
+            expect(indexes.length).toBe(2);
+            done();
+          });
         });
-        config.database.adapter.getIndexes('NewClass').then(indexes => {
-          expect(indexes.length).toBe(2);
-          done();
-        });
-      });
-    });
+      }
+    );
 
     it('empty index returns nothing', done => {
       request({
@@ -3080,7 +3083,7 @@ describe('schemas', () => {
       });
     });
 
-    it('lets you add indexes', done => {
+    it_id('ad7ab0fd-5563-46d1-bcf5-1d990690e52b')('lets you add indexes', done => {
       request({
         url: 'http://localhost:8378/1/schemas/NewClass',
         method: 'POST',
@@ -3216,7 +3219,7 @@ describe('schemas', () => {
       });
     });
 
-    it('lets you add multiple indexes', done => {
+    it_id('a80d0984-b0d4-4c68-8a8f-d60149a1ab95')('lets you add multiple indexes', done => {
       request({
         url: 'http://localhost:8378/1/schemas/NewClass',
         method: 'POST',
@@ -3299,7 +3302,7 @@ describe('schemas', () => {
       });
     });
 
-    it('lets you delete indexes', done => {
+    it_id('aa2e33cf-8e9e-4d31-b384-5fdc24f89f23')('lets you delete indexes', done => {
       request({
         url: 'http://localhost:8378/1/schemas/NewClass',
         method: 'POST',
@@ -3372,7 +3375,7 @@ describe('schemas', () => {
       });
     });
 
-    it('lets you delete multiple indexes', done => {
+    it_id('ae859126-ddc2-46c1-bb24-48585c36e6a5')('lets you delete multiple indexes', done => {
       request({
         url: 'http://localhost:8378/1/schemas/NewClass',
         method: 'POST',
@@ -3457,7 +3460,7 @@ describe('schemas', () => {
       });
     });
 
-    it('lets you add and delete indexes', async () => {
+    it_id('b5bf9bdb-ba64-49e7-87a9-c8cf4a7be379')('lets you add and delete indexes', async () => {
       // Wait due to index building in MongoDB on background process with collection lock
       const waitForIndexBuild = new Promise(r => setTimeout(r, 500));
 
@@ -3609,7 +3612,7 @@ describe('schemas', () => {
       });
     });
 
-    it('cannot update index that exist', done => {
+    it_id('d7be60f5-46dc-4295-b7ad-f7e136cdd935')('cannot update index that exist', done => {
       request({
         url: 'http://localhost:8378/1/schemas/NewClass',
         method: 'POST',

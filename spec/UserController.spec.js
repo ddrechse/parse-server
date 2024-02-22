@@ -9,7 +9,7 @@ describe('UserController', () => {
 
   describe('sendVerificationEmail', () => {
     describe('parseFrameURL not provided', () => {
-      it('uses publicServerURL', async done => {
+      it_id('857445a8-9db7-4bad-b99b-e27cb7ea8289')('uses publicServerURL', async done => {
         const server = await reconfigureServer({
           publicServerURL: 'http://www.example.com',
           customPages: {
@@ -31,25 +31,28 @@ describe('UserController', () => {
     });
 
     describe('parseFrameURL provided', () => {
-      it('uses parseFrameURL and includes the destination in the link parameter', async done => {
-        const server = await reconfigureServer({
-          publicServerURL: 'http://www.example.com',
-          customPages: {
-            parseFrameURL: 'http://someother.example.com/handle-parse-iframe',
-          },
-          verifyUserEmails: true,
-          emailAdapter,
-          appName: 'test',
-        });
-        emailAdapter.sendVerificationEmail = options => {
-          expect(options.link).toEqual(
-            'http://someother.example.com/handle-parse-iframe?link=%2Fapps%2Ftest%2Fverify_email&token=testToken&username=testUser'
-          );
-          emailAdapter.sendVerificationEmail = () => Promise.resolve();
-          done();
-        };
-        server.config.userController.sendVerificationEmail(user);
-      });
+      it_id('3a9731ae-9760-4d1b-a072-0cb9464fd777')(
+        'uses parseFrameURL and includes the destination in the link parameter',
+        async done => {
+          const server = await reconfigureServer({
+            publicServerURL: 'http://www.example.com',
+            customPages: {
+              parseFrameURL: 'http://someother.example.com/handle-parse-iframe',
+            },
+            verifyUserEmails: true,
+            emailAdapter,
+            appName: 'test',
+          });
+          emailAdapter.sendVerificationEmail = options => {
+            expect(options.link).toEqual(
+              'http://someother.example.com/handle-parse-iframe?link=%2Fapps%2Ftest%2Fverify_email&token=testToken&username=testUser'
+            );
+            emailAdapter.sendVerificationEmail = () => Promise.resolve();
+            done();
+          };
+          server.config.userController.sendVerificationEmail(user);
+        }
+      );
     });
   });
 });
