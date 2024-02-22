@@ -1,6 +1,8 @@
 {
   "spec_dir": "spec",
-  "spec_files": ["AudienceRouter.spec.js"],
+  "spec_files":  ["AccountLockoutPolicy.spec.js", "AdaptableController.spec.js", "AdapterLoader.spec.js", "AggregateRouter.spec.js", "Analytics.spec.js", "AudienceRouter.spec.js",
+  "Auth.spec.js", "AuthenticationAdapters.spec.js", "AuthenticationAdaptersV2.spec.js","batch.spec.js","CacheController.spec.js","CLI.spec.js","Client.spec.js","CloudCode.spec.js",
+ "CloudCode.Validator.spec.js", "CloudCodeLogger.spec.js", "cryptoUtils.spec.js"],
   "helpers": ["helper.js"],
   "random": false
 }
