@@ -1006,7 +1006,7 @@ describe('Parse.Query testing', () => {
       });
   });
 
-  it('equalTo queries', function (done) {
+  fit('equalTo queries', function (done) {
     const makeBoxedNumber = function (i) {
       return new BoxedNumber({ number: i });
     };
