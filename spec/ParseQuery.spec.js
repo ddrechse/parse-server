@@ -2688,7 +2688,8 @@ describe('Parse.Query testing', () => {
     });
   });
 
-  it_id('0d614067-6bce-4a40-9b5d-95a128c727e5')('select query', function (done) {
+  //  it_id('0d614067-6bce-4a40-9b5d-95a128c727e5')('select query', function (done) {
+  it('select query', function (done) {
     const RestaurantObject = Parse.Object.extend('Restaurant');
     const PersonObject = Parse.Object.extend('Person');
     const objects = [
