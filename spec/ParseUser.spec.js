@@ -3065,53 +3065,56 @@ describe('Parse.User testing', () => {
     }
   );
 
-  it('should not send email when email is not a string', async done => {
-    let emailCalled = false;
-    let emailOptions;
-    const emailAdapter = {
-      sendVerificationEmail: options => {
-        emailOptions = options;
-        emailCalled = true;
-      },
-      sendPasswordResetEmail: () => Promise.resolve(),
-      sendMail: () => Promise.resolve(),
-    };
-    await reconfigureServer({
-      appName: 'unused',
-      verifyUserEmails: true,
-      emailAdapter: emailAdapter,
-      publicServerURL: 'http://localhost:8378/1',
-    });
-    const user = new Parse.User();
-    user.set('username', 'asdf@jkl.com');
-    user.set('password', 'zxcv');
-    user.set('email', 'asdf@jkl.com');
-    await user.signUp();
-    request({
-      method: 'POST',
-      url: 'http://localhost:8378/1/requestPasswordReset',
-      headers: {
-        'X-Parse-Application-Id': Parse.applicationId,
-        'X-Parse-Session-Token': user.sessionToken,
-        'X-Parse-REST-API-Key': 'rest',
-        'Content-Type': 'application/json',
-      },
-      body: {
-        email: { $regex: '^asd' },
-      },
-    })
-      .then(res => {
-        fail('no request should succeed: ' + JSON.stringify(res));
-        done();
-      })
-      .catch(err => {
-        expect(emailCalled).toBeTruthy();
-        expect(emailOptions).toBeDefined();
-        expect(err.status).toBe(400);
-        expect(err.text).toMatch('{"code":125,"error":"you must provide a valid email string"}');
-        done();
+  it_id('28df838a-0acf-4c6b-9e63-912b03b848e3')(
+    'should not send email when email is not a string',
+    async done => {
+      let emailCalled = false;
+      let emailOptions;
+      const emailAdapter = {
+        sendVerificationEmail: options => {
+          emailOptions = options;
+          emailCalled = true;
+        },
+        sendPasswordResetEmail: () => Promise.resolve(),
+        sendMail: () => Promise.resolve(),
+      };
+      await reconfigureServer({
+        appName: 'unused',
+        verifyUserEmails: true,
+        emailAdapter: emailAdapter,
+        publicServerURL: 'http://localhost:8378/1',
       });
-  });
+      const user = new Parse.User();
+      user.set('username', 'asdf@jkl.com');
+      user.set('password', 'zxcv');
+      user.set('email', 'asdf@jkl.com');
+      await user.signUp();
+      request({
+        method: 'POST',
+        url: 'http://localhost:8378/1/requestPasswordReset',
+        headers: {
+          'X-Parse-Application-Id': Parse.applicationId,
+          'X-Parse-Session-Token': user.sessionToken,
+          'X-Parse-REST-API-Key': 'rest',
+          'Content-Type': 'application/json',
+        },
+        body: {
+          email: { $regex: '^asd' },
+        },
+      })
+        .then(res => {
+          fail('no request should succeed: ' + JSON.stringify(res));
+          done();
+        })
+        .catch(err => {
+          expect(emailCalled).toBeTruthy();
+          expect(emailOptions).toBeDefined();
+          expect(err.status).toBe(400);
+          expect(err.text).toMatch('{"code":125,"error":"you must provide a valid email string"}');
+          done();
+        });
+    }
+  );
 
   it('should aftersave with full object', done => {
     let hit = 0;

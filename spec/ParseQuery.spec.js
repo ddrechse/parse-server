@@ -2391,7 +2391,7 @@ describe('Parse.Query testing', () => {
     });
   });
 
-  it('nested include', function (done) {
+  it_id('82906c36-5f0f-4edf-9996-1335a0883747')('nested include', function (done) {
     const Child = Parse.Object.extend('Child');
     const Parent = Parse.Object.extend('Parent');
     const Grandparent = Parse.Object.extend('Grandparent');
