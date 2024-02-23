@@ -2960,7 +2960,8 @@ describe('schemas', () => {
       });
     });
 
-    it_id('85b5ba18-5bb2-4c2a-a8a1-8a923cba6a48')('can create index on default field', done => {
+    //    it_id('85b5ba18-5bb2-4c2a-a8a1-8a923cba6a48')('can create index on default field', done => {
+    it('can create index on default field', done => {
       request({
         url: 'http://localhost:8378/1/schemas/NewClass',
         method: 'POST',
