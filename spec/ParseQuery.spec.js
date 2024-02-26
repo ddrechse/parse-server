@@ -2487,51 +2487,54 @@ describe('Parse.Query testing', () => {
       );
   });
 
-  it('properly includes array of mixed objects', done => {
-    const objects = [];
-    let total = 0;
-    while (objects.length != 5) {
-      const object = new Parse.Object('AnObject');
-      object.set('key', objects.length);
-      total += objects.length;
-      objects.push(object);
+  it_id('a0af0e4e-ab6a-4729-92c3-145feb11c03a')(
+    'properly includes array of mixed objects',
+    done => {
+      const objects = [];
+      let total = 0;
+      while (objects.length != 5) {
+        const object = new Parse.Object('AnObject');
+        object.set('key', objects.length);
+        total += objects.length;
+        objects.push(object);
+      }
+      while (objects.length != 10) {
+        const object = new Parse.Object('AnotherObject');
+        object.set('key', objects.length);
+        total += objects.length;
+        objects.push(object);
+      }
+      Parse.Object.saveAll(objects)
+        .then(() => {
+          const object = new Parse.Object('AContainer');
+          object.set('objects', objects);
+          return object.save();
+        })
+        .then(() => {
+          const query = new Parse.Query('AContainer');
+          query.include('objects');
+          return query.find();
+        })
+        .then(
+          results => {
+            expect(results.length).toBe(1);
+            const res = results[0];
+            const objects = res.get('objects');
+            expect(objects.length).toBe(10);
+            objects.forEach(object => {
+              total -= object.get('key');
+            });
+            expect(total).toBe(0);
+            done();
+          },
+          e => {
+            fail('should not fail');
+            fail(JSON.stringify(e));
+            done();
+          }
+        );
     }
-    while (objects.length != 10) {
-      const object = new Parse.Object('AnotherObject');
-      object.set('key', objects.length);
-      total += objects.length;
-      objects.push(object);
-    }
-    Parse.Object.saveAll(objects)
-      .then(() => {
-        const object = new Parse.Object('AContainer');
-        object.set('objects', objects);
-        return object.save();
-      })
-      .then(() => {
-        const query = new Parse.Query('AContainer');
-        query.include('objects');
-        return query.find();
-      })
-      .then(
-        results => {
-          expect(results.length).toBe(1);
-          const res = results[0];
-          const objects = res.get('objects');
-          expect(objects.length).toBe(10);
-          objects.forEach(object => {
-            total -= object.get('key');
-          });
-          expect(total).toBe(0);
-          done();
-        },
-        e => {
-          fail('should not fail');
-          fail(JSON.stringify(e));
-          done();
-        }
-      );
-  });
+  );
 
   it('properly nested array of mixed objects with bad ids', done => {
     const objects = [];
@@ -2978,7 +2981,7 @@ describe('Parse.Query testing', () => {
   });
 
   // This relies on matchesQuery aka the $inQuery operator
-  it('or complex queries', function (done) {
+  it_id('2e09e1a8-91c7-4e56-afa5-06fbb242a2ef')('or complex queries', function (done) {
     const objects = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (x) {
       const child = new Parse.Object('Child');
       child.set('x', x);
