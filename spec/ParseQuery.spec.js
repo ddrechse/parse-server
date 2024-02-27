@@ -479,7 +479,9 @@ describe('Parse.Query testing', () => {
       }, done.fail);
   });
 
-  it('containsAll number array queries', function (done) {
+  it_id('57d95934-889c-47e6-b13b-ac274493d2ff')('containsAll number array queries', function (
+    done
+  ) {
     const NumberSet = Parse.Object.extend({ className: 'NumberSet' });
 
     const objectsList = [];
