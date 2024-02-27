@@ -4801,54 +4801,57 @@ describe('Parse.Query testing', () => {
       .catch(done.fail);
   });
 
-  it('should handle relative times correctly', async () => {
-    const now = Date.now();
-    const obj1 = new Parse.Object('MyCustomObject', {
-      name: 'obj1',
-      ttl: new Date(now + 2 * 24 * 60 * 60 * 1000), // 2 days from now
-    });
-    const obj2 = new Parse.Object('MyCustomObject', {
-      name: 'obj2',
-      ttl: new Date(now - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    });
+  it_id('64d8f297-394b-4151-96c4-be04d18cd3d2')(
+    'should handle relative times correctly',
+    async () => {
+      const now = Date.now();
+      const obj1 = new Parse.Object('MyCustomObject', {
+        name: 'obj1',
+        ttl: new Date(now + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+      });
+      const obj2 = new Parse.Object('MyCustomObject', {
+        name: 'obj2',
+        ttl: new Date(now - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      });
 
-    await Parse.Object.saveAll([obj1, obj2]);
-    const q1 = new Parse.Query('MyCustomObject');
-    q1.greaterThan('ttl', { $relativeTime: 'in 1 day' });
-    const results1 = await q1.find({ useMasterKey: true });
-    expect(results1.length).toBe(1);
+      await Parse.Object.saveAll([obj1, obj2]);
+      const q1 = new Parse.Query('MyCustomObject');
+      q1.greaterThan('ttl', { $relativeTime: 'in 1 day' });
+      const results1 = await q1.find({ useMasterKey: true });
+      expect(results1.length).toBe(1);
 
-    const q2 = new Parse.Query('MyCustomObject');
-    q2.greaterThan('ttl', { $relativeTime: '1 day ago' });
-    const results2 = await q2.find({ useMasterKey: true });
-    expect(results2.length).toBe(1);
+      const q2 = new Parse.Query('MyCustomObject');
+      q2.greaterThan('ttl', { $relativeTime: '1 day ago' });
+      const results2 = await q2.find({ useMasterKey: true });
+      expect(results2.length).toBe(1);
 
-    const q3 = new Parse.Query('MyCustomObject');
-    q3.lessThan('ttl', { $relativeTime: '5 days ago' });
-    const results3 = await q3.find({ useMasterKey: true });
-    expect(results3.length).toBe(0);
+      const q3 = new Parse.Query('MyCustomObject');
+      q3.lessThan('ttl', { $relativeTime: '5 days ago' });
+      const results3 = await q3.find({ useMasterKey: true });
+      expect(results3.length).toBe(0);
 
-    const q4 = new Parse.Query('MyCustomObject');
-    q4.greaterThan('ttl', { $relativeTime: '3 days ago' });
-    const results4 = await q4.find({ useMasterKey: true });
-    expect(results4.length).toBe(2);
+      const q4 = new Parse.Query('MyCustomObject');
+      q4.greaterThan('ttl', { $relativeTime: '3 days ago' });
+      const results4 = await q4.find({ useMasterKey: true });
+      expect(results4.length).toBe(2);
 
-    const q5 = new Parse.Query('MyCustomObject');
-    q5.greaterThan('ttl', { $relativeTime: 'now' });
-    const results5 = await q5.find({ useMasterKey: true });
-    expect(results5.length).toBe(1);
+      const q5 = new Parse.Query('MyCustomObject');
+      q5.greaterThan('ttl', { $relativeTime: 'now' });
+      const results5 = await q5.find({ useMasterKey: true });
+      expect(results5.length).toBe(1);
 
-    const q6 = new Parse.Query('MyCustomObject');
-    q6.greaterThan('ttl', { $relativeTime: 'now' });
-    q6.lessThan('ttl', { $relativeTime: 'in 1 day' });
-    const results6 = await q6.find({ useMasterKey: true });
-    expect(results6.length).toBe(0);
+      const q6 = new Parse.Query('MyCustomObject');
+      q6.greaterThan('ttl', { $relativeTime: 'now' });
+      q6.lessThan('ttl', { $relativeTime: 'in 1 day' });
+      const results6 = await q6.find({ useMasterKey: true });
+      expect(results6.length).toBe(0);
 
-    const q7 = new Parse.Query('MyCustomObject');
-    q7.greaterThan('ttl', { $relativeTime: '1 year 3 weeks ago' });
-    const results7 = await q7.find({ useMasterKey: true });
-    expect(results7.length).toBe(2);
-  });
+      const q7 = new Parse.Query('MyCustomObject');
+      q7.greaterThan('ttl', { $relativeTime: '1 year 3 weeks ago' });
+      const results7 = await q7.find({ useMasterKey: true });
+      expect(results7.length).toBe(2);
+    }
+  );
 
   it('should error on invalid relative time', async () => {
     const obj1 = new Parse.Object('MyCustomObject', {
