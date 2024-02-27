@@ -1008,7 +1008,7 @@ describe('Parse.Query testing', () => {
       });
   });
 
-  it('equalTo queries', function (done) {
+  it_id('261bf8e9-425f-4aef-a5b6-fc1371b512e2')('equalTo queries', function (done) {
     const makeBoxedNumber = function (i) {
       return new BoxedNumber({ number: i });
     };
@@ -2866,47 +2866,50 @@ describe('Parse.Query testing', () => {
     });
   });
 
-  it('equalTo on same column as $dontSelect should not break $dontSelect functionality (#3678)', function (done) {
-    const AuthorObject = Parse.Object.extend('Author');
-    const BlockedObject = Parse.Object.extend('Blocked');
-    const PostObject = Parse.Object.extend('Post');
+  it_id('64b34f22-198c-4760-aa6a-218005ef9436')(
+    'equalTo on same column as $dontSelect should not break $dontSelect functionality (#3678)',
+    function (done) {
+      const AuthorObject = Parse.Object.extend('Author');
+      const BlockedObject = Parse.Object.extend('Blocked');
+      const PostObject = Parse.Object.extend('Post');
 
-    let postAuthor = null;
-    let requestUser = null;
+      let postAuthor = null;
+      let requestUser = null;
 
-    return new AuthorObject({ name: 'Julius' })
-      .save()
-      .then(user => {
-        postAuthor = user;
-        return new AuthorObject({ name: 'Bob' }).save();
-      })
-      .then(user => {
-        requestUser = user;
-        const objects = [
-          new PostObject({ author: postAuthor, title: 'Lorem ipsum' }),
-          new PostObject({ author: requestUser, title: 'Kafka' }),
-          new PostObject({ author: requestUser, title: 'Brown fox' }),
-          new BlockedObject({
-            blockedBy: postAuthor,
-            blockedUser: requestUser,
-          }),
-        ];
-        return Parse.Object.saveAll(objects);
-      })
-      .then(() => {
-        const banListQuery = new Parse.Query(BlockedObject);
-        banListQuery.equalTo('blockedUser', requestUser);
+      return new AuthorObject({ name: 'Julius' })
+        .save()
+        .then(user => {
+          postAuthor = user;
+          return new AuthorObject({ name: 'Bob' }).save();
+        })
+        .then(user => {
+          requestUser = user;
+          const objects = [
+            new PostObject({ author: postAuthor, title: 'Lorem ipsum' }),
+            new PostObject({ author: requestUser, title: 'Kafka' }),
+            new PostObject({ author: requestUser, title: 'Brown fox' }),
+            new BlockedObject({
+              blockedBy: postAuthor,
+              blockedUser: requestUser,
+            }),
+          ];
+          return Parse.Object.saveAll(objects);
+        })
+        .then(() => {
+          const banListQuery = new Parse.Query(BlockedObject);
+          banListQuery.equalTo('blockedUser', requestUser);
 
-        return new Parse.Query(PostObject)
-          .equalTo('author', postAuthor)
-          .doesNotMatchKeyInQuery('author', 'blockedBy', banListQuery)
-          .find()
-          .then(r => {
-            expect(r.length).toEqual(0);
-            done();
-          }, done.fail);
-      });
-  });
+          return new Parse.Query(PostObject)
+            .equalTo('author', postAuthor)
+            .doesNotMatchKeyInQuery('author', 'blockedBy', banListQuery)
+            .find()
+            .then(r => {
+              expect(r.length).toEqual(0);
+              done();
+            }, done.fail);
+        });
+    }
+  );
 
   it('multiple dontSelect query', function (done) {
     const RestaurantObject = Parse.Object.extend('Restaurant');
