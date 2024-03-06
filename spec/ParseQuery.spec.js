@@ -5132,37 +5132,40 @@ describe('Parse.Query testing', () => {
       .catch(() => done());
   });
 
-  it('can add new config to existing config', async () => {
-    await request({
-      method: 'PUT',
-      url: 'http://localhost:8378/1/config',
-      json: true,
-      body: {
-        params: {
-          files: [{ __type: 'File', name: 'name', url: 'http://url' }],
+  it_id('4c1ef2d8-232e-400f-9c96-53149fe86e29')(
+    'can add new config to existing config',
+    async () => {
+      await request({
+        method: 'PUT',
+        url: 'http://localhost:8378/1/config',
+        json: true,
+        body: {
+          params: {
+            files: [{ __type: 'File', name: 'name', url: 'http://url' }],
+          },
         },
-      },
-      headers: masterKeyHeaders,
-    });
+        headers: masterKeyHeaders,
+      });
 
-    await request({
-      method: 'PUT',
-      url: 'http://localhost:8378/1/config',
-      json: true,
-      body: {
-        params: { newConfig: 'good' },
-      },
-      headers: masterKeyHeaders,
-    });
+      await request({
+        method: 'PUT',
+        url: 'http://localhost:8378/1/config',
+        json: true,
+        body: {
+          params: { newConfig: 'good' },
+        },
+        headers: masterKeyHeaders,
+      });
 
-    const result = await Parse.Config.get();
-    equal(result.get('files')[0].toJSON(), {
-      __type: 'File',
-      name: 'name',
-      url: 'http://url',
-    });
-    equal(result.get('newConfig'), 'good');
-  });
+      const result = await Parse.Config.get();
+      equal(result.get('files')[0].toJSON(), {
+        __type: 'File',
+        name: 'name',
+        url: 'http://url',
+      });
+      equal(result.get('newConfig'), 'good');
+    }
+  );
 
   it('can set object type key', async () => {
     const data = { bar: true, baz: 100 };
